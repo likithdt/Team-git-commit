@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GreenPulse — Journey Details</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+
+  <style>
+    .material-symbols-outlined { font-size:24px; }
+    .milestone-line { width:2px; background:linear-gradient(to bottom,#3fff8b,transparent); margin-left:13px; height:2rem; }
+    #map-modal { display:none; position:fixed; inset:0; z-index:300; background:#07090a; }
+  </style>
+</head>
+
+<body class="bioluminescent-glow min-h-screen pb-28">
+
+<header class="top-bar">
+  <div class="flex items-center gap-3">
+    <a href="route-planner.html" class="w-9 h-9 rounded-full glass-vessel flex items-center justify-center border border-white/10">
+      <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+    </a>
+    <span id="page-title" class="text-lg font-bold text-primary">Journey Details</span>
+  </div>
+  <span id="route-tag-badge" class="badge text-primary border-primary/40 bg-primary/10">Healthy Path</span>
+</header>
+
+<main class="pt-24 px-4 max-w-2xl mx-auto space-y-4" id="journey-content">
+  <div class="glass-vessel rounded-2xl p-8 text-center">
+    <div class="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+    <span class="text-sm">Loading journey details…</span>
+  </div>
+</main>
+
+<nav id="bottom-nav"></nav>
+
+<script src="assets/app.js"></script>
+
+<script>
+buildBottomNav("journey");
+
+let journeyData = null;
+
+// Load journey
+(async () => {
+  const p    = new URLSearchParams(location.search);
+  const rank = parseInt(p.get("rank") || "1");
+  const orig = decodeURIComponent(p.get("origin") || "MG Road");
+  const dest = decodeURIComponent(p.get("dest")   || "Koramangala");
+
+  try {
+    const d = await API.journey(rank, orig, dest);
+    journeyData = d;
+    d._orig = orig; 
+    d._dest = dest;
+    renderJourney(d);
+  } catch(e) {
+    document.getElementById("journey-content").innerHTML =
+      `<div class="glass-vessel rounded-2xl p-8 text-center">
+        <p>⚠️ Backend offline. Run server.</p>
+      </div>`;
+  }
+})();
+
+// Render UI
+function renderJourney(d) {
+  const c = d.color, orig = d._orig, dest = d._dest;
+
+  document.getElementById("page-title").textContent = d.name;
+
+  document.getElementById("journey-content").innerHTML = `
+    <section class="glass-vessel rounded-2xl p-5">
+      <h2 class="text-lg font-bold">${orig} → ${dest}</h2>
+      <p>${d.duration_min} min • ${d.distance_km} km</p>
+      <p>Lungs Score: ${d.lungs_score}</p>
+    </section>
+
+    <button onclick="startJourney()" class="btn-primary w-full mt-4">
+      Start Journey
+    </button>
+  `;
+}
+
+// Dummy navigation start
+function startJourney() {
+  alert("Navigation Started 🚀");
+}
+</script>
+
+</body>
+</html>
