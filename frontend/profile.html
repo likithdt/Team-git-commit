@@ -1,199 +1,224 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>GreenPulse — Profile</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="assets/styles.css"/>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GreenPulse — Profile</title>
-        <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;font-size:24px;line-height:1;}
-    @keyframes si{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-    .si{animation:si .45s cubic-bezier(.32,.72,0,1) forwards;}
-    .badge-card{background:rgba(24,26,27,.45);backdrop-filter:blur(16px);border-radius:1.25rem;padding:1rem;border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;gap:.5rem;text-align:center;transition:transform .2s;}
-    .badge-card:hover{transform:translateY(-2px);}
-    .achievement{display:flex;align-items:center;gap:.875rem;padding:.875rem;border-radius:1.125rem;background:rgba(18,20,19,.45);border:1px solid rgba(255,255,255,.05);}
-    .setting-row{display:flex;align-items:center;justify-content:space-between;padding:.875rem 0;border-bottom:1px solid rgba(255,255,255,.05);}
-    .setting-row:last-child{border-bottom:none;}
-    /* Toggle switch */
-    .toggle{position:relative;width:2.75rem;height:1.5rem;cursor:pointer;}
-    .toggle input{opacity:0;width:0;height:0;}
-    .toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,.12);border-radius:999px;transition:.3s;}
-    .toggle-slider::before{content:"";position:absolute;width:1.125rem;height:1.125rem;left:.2rem;top:.19rem;background:#fff;border-radius:50%;transition:.3s;}
-    .toggle input:checked+.toggle-slider{background:#3fff8b;}
-    .toggle input:checked+.toggle-slider::before{transform:translateX(1.25rem);}
-    @keyframes count-up{from{opacity:0}to{opacity:1}}
-    .ring-anim{stroke-dashoffset:var(--offset);transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);}
+    body{min-height:100dvh;padding-bottom:90px;background:var(--surface);}
+    .page{max-width:600px;margin:0 auto;padding:4.75rem 1rem 1rem;}
+
+    /* Card base */
+    .card{background:rgba(20,22,21,.6);backdrop-filter:blur(20px);border-radius:1.375rem;border:1px solid rgba(255,255,255,.07);overflow:hidden;}
+    .card+.card{margin-top:.875rem;}
+
+    /* Section headings */
+    .sec-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#ababac;display:flex;align-items:center;gap:.5rem;padding:1rem 1rem .625rem;}
+
+    /* Avatar */
+    .avatar-wrap{position:relative;width:68px;height:68px;flex-shrink:0;}
+    .avatar-letter{position:absolute;inset:7px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.625rem;font-weight:900;color:#3fff8b;background:rgba(63,255,139,.15);}
+
+    /* Stat strip */
+    .stat-strip{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid rgba(255,255,255,.06);}
+    .sc{display:flex;flex-direction:column;align-items:center;padding:.875rem .5rem;gap:.15rem;}
+    .sc:not(:last-child){border-right:1px solid rgba(255,255,255,.06);}
+    .sc-big{font-size:1.5rem;font-weight:900;line-height:1;}
+    .sc-tiny{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#ababac;}
+
+    /* Badge grid */
+    .badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;padding:0 1rem 1rem;}
+    .bdg{display:flex;flex-direction:column;align-items:center;gap:.375rem;padding:.875rem .5rem;border-radius:1.125rem;background:rgba(24,26,25,.6);border:1px solid rgba(255,255,255,.06);text-align:center;transition:transform .2s;}
+    .bdg:hover{transform:translateY(-2px);}
+    .bdg-icon{width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:.1rem;}
+    .bdg-name{font-size:.72rem;font-weight:700;line-height:1.25;}
+    .bdg-sub{font-size:.62rem;color:#ababac;line-height:1.3;}
+    .bdg-locked{font-size:.58rem;color:#ababac;background:rgba(255,255,255,.06);padding:.1rem .4rem;border-radius:999px;margin-top:.1rem;}
+
+    /* Achievement row */
+    .ach-row{display:flex;align-items:center;gap:.875rem;padding:.875rem 1rem;border-bottom:1px solid rgba(255,255,255,.05);}
+    .ach-row:last-child{border-bottom:none;}
+    .ach-icon{width:2.5rem;height:2.5rem;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+    /* Weekly chart */
+    .week-bars{display:flex;align-items:flex-end;gap:.5rem;height:72px;padding:0 1rem;}
+    .wbar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:.2rem;}
+    .wbar-val{font-size:.6rem;font-weight:700;}
+    .wbar-bg{width:100%;border-radius:.4rem .4rem 0 0;position:relative;overflow:hidden;}
+    .wbar-fill{position:absolute;bottom:0;left:0;right:0;height:0;border-radius:.4rem .4rem 0 0;transition:height 1s cubic-bezier(.4,0,.2,1);}
+    .wday{display:flex;justify-content:space-around;padding:0 1rem .625rem;}
+    .wday span{flex:1;text-align:center;font-size:.62rem;color:#ababac;font-weight:600;}
+
+    /* Setting row */
+    .set-row{display:flex;align-items:center;justify-content:space-between;padding:.875rem 1rem;border-bottom:1px solid rgba(255,255,255,.05);}
+    .set-row:last-child{border-bottom:none;}
+    .set-label{font-weight:600;font-size:.875rem;}
+    .set-sub{font-size:.72rem;color:#ababac;margin-top:.1rem;}
+
+    /* Toggle */
+    .tog{position:relative;width:42px;height:23px;flex-shrink:0;}
+    .tog input{position:absolute;opacity:0;width:0;height:0;}
+    .tog-sl{position:absolute;inset:0;border-radius:999px;background:rgba(255,255,255,.1);cursor:pointer;transition:.25s;}
+    .tog-sl::before{content:'';position:absolute;width:17px;height:17px;border-radius:50%;left:3px;top:3px;background:#ababac;transition:.25s;}
+    .tog input:checked+.tog-sl{background:rgba(63,255,139,.4);}
+    .tog input:checked+.tog-sl::before{transform:translateX(19px);background:#3fff8b;}
+
+    /* Edit modal */
+    .modal-bg{display:none;position:fixed;inset:0;z-index:400;background:rgba(7,9,10,.88);backdrop-filter:blur(18px);align-items:center;justify-content:center;padding:1.5rem;}
+    .modal-card{width:100%;max-width:380px;background:rgba(16,19,18,.96);border:1px solid rgba(255,255,255,.09);border-radius:1.5rem;padding:1.75rem;}
+    .modal-input{width:100%;background:rgba(36,38,39,.75)!important;border:1px solid rgba(255,255,255,.09);border-radius:.875rem;padding:.875rem 1rem;color:#fff!important;-webkit-text-fill-color:#fff!important;font-family:'Inter',sans-serif;font-size:.9375rem;outline:none;transition:border-color .2s;margin-bottom:.875rem;}
+    .modal-input:focus{border-color:rgba(63,255,139,.45);}
+    .modal-input:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px rgba(30,32,31,.99) inset!important;-webkit-text-fill-color:#fff!important;}
+
+    @keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+    .page>*{animation:slideUp .45s cubic-bezier(.32,.72,0,1) both;}
+    .page>*:nth-child(2){animation-delay:.06s;}
+    .page>*:nth-child(3){animation-delay:.1s;}
+    .page>*:nth-child(4){animation-delay:.14s;}
+    .page>*:nth-child(5){animation-delay:.18s;}
+    .page>*:nth-child(6){animation-delay:.22s;}
   </style>
 </head>
-<body class="bio-glow" style="min-height:100dvh;padding-bottom:80px;">
+<body class="bio-glow">
 
-
+<!-- TOP BAR -->
 <header class="top-bar">
-  <div class="flex items-center gap-3">
-    <a href="dashboard.html" class="w-9 h-9 rounded-full glass-vessel flex items-center justify-center border border-white/10 active:scale-90 transition-transform">
-      <span class="material-symbols-outlined text-on-surface-variant text-[20px]">arrow_back</span>
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <a href="dashboard.html" style="width:2rem;height:2rem;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;text-decoration:none;color:#fff;flex-shrink:0;">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
     </a>
-    <span class="text-lg font-bold text-primary text-glow-primary tracking-tight">My Profile</span>
+    <span style="font-size:1rem;font-weight:800;letter-spacing:-.01em;">My Profile</span>
   </div>
-  <button onclick="doLogout()" style="display:flex;align-items:center;gap:.35rem;padding:.4rem .875rem;border-radius:999px;background:rgba(255,113,80,.12);border:1px solid rgba(255,113,80,.28);color:#ff7350;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit;">
-    <span class="material-symbols-outlined" style="font-size:16px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">logout</span>Sign Out
+  <button onclick="openEdit()" style="display:flex;align-items:center;gap:.35rem;padding:.4rem .875rem;border-radius:999px;background:rgba(63,255,139,.1);border:1px solid rgba(63,255,139,.25);color:#3fff8b;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+    Edit
   </button>
 </header>
 
-<main class="pt-24 px-4 max-w-2xl mx-auto space-y-4 si">
+<div class="page">
 
-  <!-- Avatar + Name -->
-  <section class="glass-vessel rounded-2xl p-6 relative overflow-hidden">
-    <div style="position:absolute;top:-3rem;right:-3rem;width:10rem;height:10rem;border-radius:50%;background:rgba(63,255,139,.08);filter:blur(40px);pointer-events:none;"></div>
-    <div style="position:relative;z-index:1;display:flex;align-items:center;gap:1.125rem;">
-      <!-- Avatar ring -->
-      <div style="position:relative;flex-shrink:0;">
-        <svg width="76" height="76" viewBox="0 0 76 76" style="transform:rotate(-90deg);">
-          <circle cx="38" cy="38" r="34" fill="transparent" stroke="rgba(255,255,255,0.06)" stroke-width="4"/>
-          <circle id="avatar-ring" cx="38" cy="38" r="34" fill="transparent" stroke="#3fff8b" stroke-width="4"
-            stroke-linecap="round" stroke-dasharray="213.6"
-            stroke-dashoffset="64" style="filter:drop-shadow(0 0 6px rgba(63,255,139,.6));transition:stroke-dashoffset 1.2s ease;"/>
+  <!-- ── Profile Hero ── -->
+  <div class="card">
+    <div style="padding:1.25rem;display:flex;align-items:center;gap:1rem;">
+      <!-- Avatar with progress ring -->
+      <div class="avatar-wrap">
+        <svg width="68" height="68" viewBox="0 0 68 68" style="transform:rotate(-90deg);position:absolute;inset:0;">
+          <circle cx="34" cy="34" r="30" fill="transparent" stroke="rgba(255,255,255,.07)" stroke-width="4"/>
+          <circle id="av-ring" cx="34" cy="34" r="30" fill="transparent" stroke="#3fff8b" stroke-width="4"
+            stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="188.5"
+            style="filter:drop-shadow(0 0 5px rgba(63,255,139,.6));transition:stroke-dashoffset 1.2s ease;"/>
         </svg>
-        <div id="avatar-circle" style="position:absolute;inset:6px;border-radius:50%;background:rgba(63,255,139,.18);display:flex;align-items:center;justify-content:center;font-size:1.75rem;font-weight:900;color:#3fff8b;">?</div>
+        <div class="avatar-letter" id="av-letter">?</div>
       </div>
       <div style="flex:1;min-width:0;">
-        <div id="prof-name"  style="font-size:1.3rem;font-weight:800;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Loading…</div>
-        <div id="prof-email" style="font-size:.78rem;color:#ababac;margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-        <div style="display:flex;align-items:center;gap:.375rem;margin-top:.5rem;">
-          <span class="material-symbols-outlined" style="font-size:14px;color:#3fff8b;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">location_on</span>
-          <span id="prof-city" style="font-size:.78rem;color:#ababac;font-weight:600;"></span>
-          <span style="color:#ababac;font-size:.78rem;">·</span>
-          <span id="prof-since" style="font-size:.78rem;color:#ababac;"></span>
+        <div id="p-name" style="font-size:1.1875rem;font-weight:800;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+        <div id="p-email" style="font-size:.75rem;color:#ababac;margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        <div style="display:flex;align-items:center;gap:.375rem;margin-top:.45rem;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="#3fff8b"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          <span id="p-city" style="font-size:.75rem;color:#ababac;font-weight:600;"></span>
+          <span style="color:#474849;">·</span>
+          <span id="p-since" style="font-size:.75rem;color:#ababac;"></span>
         </div>
-      </div>
-      <a href="#" onclick="showEditModal();return false;" style="width:2.25rem;height:2.25rem;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;text-decoration:none;">
-        <span class="material-symbols-outlined" style="font-size:18px;color:#ababac;">edit</span>
-      </a>
-    </div>
-
-    <!-- Health summary bar -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,.06);">
-      <div style="text-align:center;">
-        <div style="font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#ababac;margin-bottom:.2rem;">Journeys</div>
-        <div id="stat-journeys" style="font-size:1.5rem;font-weight:900;color:#fff;">—</div>
-      </div>
-      <div style="text-align:center;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);">
-        <div style="font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#ababac;margin-bottom:.2rem;">CO₂ Saved</div>
-        <div id="stat-co2" style="font-size:1.5rem;font-weight:900;color:#3fff8b;">—<span style="font-size:.75rem;font-weight:600;color:#ababac;">g</span></div>
-      </div>
-      <div style="text-align:center;">
-        <div style="font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#ababac;margin-bottom:.2rem;">Avg Lungs</div>
-        <div id="stat-lungs" style="font-size:1.5rem;font-weight:900;color:#ffbd5c;">—</div>
       </div>
     </div>
-  </section>
-
-  <!-- Health Badges -->
-  <section class="glass-vessel rounded-2xl p-5">
-    <h3 style="font-weight:700;font-size:.93rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;">
-      <span class="material-symbols-outlined" style="color:#ffbd5c;font-size:20px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">workspace_premium</span>
-      Health Badges
-    </h3>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;" id="badges-grid">
-      <!-- Injected by JS -->
-    </div>
-  </section>
-
-  <!-- Achievements -->
-  <section class="glass-vessel rounded-2xl p-5">
-    <h3 style="font-weight:700;font-size:.93rem;margin-bottom:.875rem;display:flex;align-items:center;gap:.5rem;">
-      <span class="material-symbols-outlined" style="color:#3fff8b;font-size:20px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">emoji_events</span>
-      Achievements
-    </h3>
-    <div style="display:flex;flex-direction:column;gap:.625rem;" id="achievements-list"></div>
-  </section>
-
-  <!-- Weekly Chart -->
-  <section class="glass-vessel rounded-2xl p-5">
-    <h3 style="font-weight:700;font-size:.93rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;">
-      <span class="material-symbols-outlined" style="color:#3fff8b;font-size:20px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">bar_chart</span>
-      This Week's Lungs Score
-    </h3>
-    <div style="display:flex;align-items:flex-end;gap:.5rem;height:80px;" id="week-chart"></div>
-    <div style="display:flex;justify-content:space-around;margin-top:.5rem;">
-      ${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<span style="font-size:.62rem;color:#ababac;font-weight:600;">${d}</span>`).join("")}
-    </div>
-  </section>
-
-  <!-- Settings -->
-  <section class="glass-vessel rounded-2xl p-5">
-    <h3 style="font-weight:700;font-size:.93rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;">
-      <span class="material-symbols-outlined" style="color:#ababac;font-size:20px;font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">settings</span>
-      Preferences
-    </h3>
-    <div>
-      <div class="setting-row">
-        <div>
-          <div style="font-weight:600;font-size:.88rem;">Push Notifications</div>
-          <div style="font-size:.73rem;color:#ababac;">Departure window reminders</div>
-        </div>
-        <label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+    <!-- Stats strip -->
+    <div class="stat-strip">
+      <div class="sc">
+        <div class="sc-tiny">Journeys</div>
+        <div class="sc-big" id="sc-journeys">—</div>
       </div>
-      <div class="setting-row">
-        <div>
-          <div style="font-weight:600;font-size:.88rem;">Health Alerts</div>
-          <div style="font-size:.73rem;color:#ababac;">High AQI or heat warnings</div>
-        </div>
-        <label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
+      <div class="sc">
+        <div class="sc-tiny">CO₂ Saved</div>
+        <div class="sc-big" id="sc-co2" style="color:#3fff8b;">—<span style="font-size:.85rem;font-weight:600;color:#ababac;">g</span></div>
       </div>
-      <div class="setting-row">
-        <div>
-          <div style="font-weight:600;font-size:.88rem;">Wearable Sync</div>
-          <div style="font-size:.73rem;color:#ababac;">Apple Watch / Fitbit</div>
-        </div>
-        <label class="toggle"><input type="checkbox"/><span class="toggle-slider"></span></label>
-      </div>
-      <div class="setting-row">
-        <div>
-          <div style="font-weight:600;font-size:.88rem;">Dark Mode</div>
-          <div style="font-size:.73rem;color:#ababac;">Always on</div>
-        </div>
-        <label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label>
-      </div>
-      <div class="setting-row" style="cursor:pointer;" onclick="window.location='login.html'">
-        <div>
-          <div style="font-weight:600;font-size:.88rem;color:#ff7350;">Delete Account</div>
-          <div style="font-size:.73rem;color:#ababac;">Permanently remove your data</div>
-        </div>
-        <span class="material-symbols-outlined" style="font-size:18px;color:#ababac;">chevron_right</span>
+      <div class="sc">
+        <div class="sc-tiny">Avg Lungs</div>
+        <div class="sc-big" id="sc-lungs" style="color:#ffbd5c;">—</div>
       </div>
     </div>
-  </section>
-
-  <!-- App info -->
-  <div style="text-align:center;padding:1rem 0;color:#ababac;font-size:.72rem;">
-    GreenPulse v1.0.0 · Built at Presidency College Hackathon 🌿<br>
-    <a href="#" style="color:#3fff8b;text-decoration:none;">Privacy Policy</a> · <a href="#" style="color:#3fff8b;text-decoration:none;">Terms of Service</a>
   </div>
-</main>
 
+  <!-- ── Health Badges ── -->
+  <div class="card">
+    <div class="sec-title">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="#ffbd5c"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.5-2.33 6.79-5 7.93-2.67-1.14-5-4.43-5-7.93V7.18L12 5z"/></svg>
+      Health Badges
+    </div>
+    <div class="badge-grid" id="badge-grid"></div>
+  </div>
+
+  <!-- ── Achievements ── -->
+  <div class="card">
+    <div class="sec-title">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="#3fff8b"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
+      Achievements
+    </div>
+    <div id="ach-list"></div>
+  </div>
+
+  <!-- ── This Week ── -->
+  <div class="card">
+    <div class="sec-title">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="#3fff8b"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
+      This Week's Lungs Score
+    </div>
+    <div class="week-bars" id="week-bars"></div>
+    <div class="wday" id="week-days"></div>
+  </div>
+
+  <!-- ── Preferences ── -->
+  <div class="card">
+    <div class="sec-title">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="#ababac"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+      Preferences
+    </div>
+    <div class="set-row">
+      <div><div class="set-label">Push Notifications</div><div class="set-sub">Departure window reminders</div></div>
+      <label class="tog"><input type="checkbox" checked onchange="savePref('notif',this.checked)"/><span class="tog-sl"></span></label>
+    </div>
+    <div class="set-row">
+      <div><div class="set-label">Health Alerts</div><div class="set-sub">High AQI or heat warnings</div></div>
+      <label class="tog"><input type="checkbox" checked onchange="savePref('alerts',this.checked)"/><span class="tog-sl"></span></label>
+    </div>
+    <div class="set-row">
+      <div><div class="set-label">Wearable Sync</div><div class="set-sub">Apple Watch / Fitbit</div></div>
+      <label class="tog"><input type="checkbox" onchange="savePref('wearable',this.checked)"/><span class="tog-sl"></span></label>
+    </div>
+    <div class="set-row" style="cursor:pointer;" onclick="doLogout()">
+      <div><div class="set-label" style="color:#ff7350;">Sign Out</div><div class="set-sub">Log out of your account</div></div>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="#474849"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align:center;padding:1.25rem 0 .5rem;color:#474849;font-size:.72rem;line-height:1.8;">
+    GreenPulse v1.0 · Presidency College Hackathon 🌿<br>
+    <a href="#" style="color:#3fff8b;text-decoration:none;opacity:.7;">Privacy</a> &nbsp;·&nbsp;
+    <a href="#" style="color:#3fff8b;text-decoration:none;opacity:.7;">Terms</a>
+  </div>
+
+</div><!-- /page -->
+
+<!-- BOTTOM NAV -->
 <nav id="bottom-nav"></nav>
 
-<!-- Edit Profile Modal -->
-<div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(7,9,10,.84);backdrop-filter:blur(18px);align-items:center;justify-content:center;padding:1.5rem;">
-  <div style="width:100%;max-width:380px;background:rgba(16,19,18,.92);border:1px solid rgba(255,255,255,.08);border-radius:1.5rem;padding:1.75rem;">
-    <h2 style="font-size:1.15rem;font-weight:800;margin-bottom:1.25rem;color:#fff;">Edit Profile</h2>
-    <div style="display:flex;flex-direction:column;gap:.875rem;">
-      <div>
-        <label style="font-size:.72rem;font-weight:700;color:#ababac;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.35rem;">Display Name</label>
-        <input id="edit-name" style="width:100%;background:rgba(36,38,39,.7)!important;border:1px solid rgba(255,255,255,.08);border-radius:.875rem;padding:.8rem 1rem;color:#fff!important;-webkit-text-fill-color:#fff!important;font-family:inherit;font-size:.9rem;outline:none;" type="text"/>
-      </div>
-      <div>
-        <label style="font-size:.72rem;font-weight:700;color:#ababac;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.35rem;">City</label>
-        <input id="edit-city" style="width:100%;background:rgba(36,38,39,.7)!important;border:1px solid rgba(255,255,255,.08);border-radius:.875rem;padding:.8rem 1rem;color:#fff!important;-webkit-text-fill-color:#fff!important;font-family:inherit;font-size:.9rem;outline:none;" type="text"/>
-      </div>
+<!-- EDIT MODAL -->
+<div class="modal-bg" id="edit-modal">
+  <div class="modal-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h2 style="font-size:1.125rem;font-weight:800;">Edit Profile</h2>
+      <button onclick="closeEdit()" style="width:2rem;height:2rem;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#ababac;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
     </div>
-    <button onclick="saveEdit()" class="btn-primary" style="margin-top:1.25rem;display:flex;align-items:center;justify-content:center;gap:.5rem;">
-      <span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:'FILL' 1,'wght' 600,'GRAD' 0,'opsz' 24;">save</span>Save Changes
-    </button>
-    <button onclick="closeEdit()" style="width:100%;padding:.75rem;border:1px solid rgba(255,255,255,.1);border-radius:1rem;background:transparent;color:#ababac;font-size:.88rem;cursor:pointer;font-family:inherit;margin-top:.625rem;">Cancel</button>
+    <label style="font-size:.72rem;font-weight:700;color:#ababac;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.35rem;">Display Name</label>
+    <input id="edit-name" class="modal-input" type="text" placeholder="Your name"/>
+    <label style="font-size:.72rem;font-weight:700;color:#ababac;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.35rem;">City</label>
+    <input id="edit-city" class="modal-input" type="text" placeholder="e.g. Bengaluru"/>
+    <button onclick="saveEdit()" class="btn-primary">Save Changes</button>
+    <button onclick="closeEdit()" style="width:100%;padding:.75rem;margin-top:.625rem;border:1px solid rgba(255,255,255,.1);border-radius:1rem;background:transparent;color:#ababac;font-size:.875rem;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
   </div>
 </div>
 
@@ -201,121 +226,145 @@
 <script>
 buildBottomNav("profile");
 
+/* ── Data ── */
 const BADGES = [
-  {icon:"eco",         label:"Green Starter",  desc:"First healthy route",  color:"#3fff8b", unlocked:true},
-  {icon:"air",         label:"Clean Air Hero",  desc:"10 low-AQI journeys",  color:"#3fff8b", unlocked:true},
-  {icon:"directions_bike",label:"Cyclist",      desc:"5 cycling commutes",   color:"#ffbd5c", unlocked:true},
-  {icon:"thermostat",  label:"Heat Dodger",     desc:"Avoided 5 heat zones", color:"#ffbd5c", unlocked:false},
-  {icon:"savings",     label:"CO₂ Saver",       desc:"Saved 1kg CO₂",        color:"#3fff8b", unlocked:false},
-  {icon:"fitness_center",label:"Calorie King",  desc:"Burned 1000+ kcal",    color:"#ff7350", unlocked:false},
+  {emoji:"🌱", label:"Green Starter",  desc:"First healthy route",   color:"#3fff8b", unlocked:true},
+  {emoji:"💨", label:"Air Hero",       desc:"10 low-AQI journeys",   color:"#3fff8b", unlocked:true},
+  {emoji:"🚲", label:"Cyclist",        desc:"5 cycling commutes",    color:"#ffbd5c", unlocked:false},
+  {emoji:"🌡", label:"Heat Dodger",   desc:"Avoided 5 heat zones",  color:"#ffbd5c", unlocked:false},
+  {emoji:"💚", label:"CO₂ Saver",     desc:"Saved 1kg CO₂",         color:"#3fff8b", unlocked:false},
+  {emoji:"🏃", label:"Calorie King",  desc:"Burned 1000+ kcal",     color:"#ff7350", unlocked:false},
 ];
 
 const ACHIEVEMENTS = [
-  {icon:"emoji_nature", label:"7-Day Streak",      sub:"Used GreenPulse 7 days in a row",   color:"#3fff8b", done:true,  pts:100},
-  {icon:"air",          label:"PM2.5 Guardian",     sub:"Avoided 500mg PM2.5 total",         color:"#3fff8b", done:true,  pts:200},
-  {icon:"route",        label:"Route Explorer",     sub:"Tried all 3 route types",           color:"#ffbd5c", done:false, pts:150},
-  {icon:"public",       label:"City Contributor",   sub:"Submitted 5 community AQI reports", color:"#ff7350", done:false, pts:300},
+  {emoji:"🌿", label:"7-Day Streak",     sub:"7 days in a row",          color:"#3fff8b", done:true,  pts:100},
+  {emoji:"💨", label:"PM2.5 Guardian",   sub:"Avoided 500mg PM2.5",      color:"#3fff8b", done:true,  pts:200},
+  {emoji:"🛣",  label:"Route Explorer",   sub:"Tried all 3 route types",  color:"#ffbd5c", done:false, pts:150},
+  {emoji:"🌍", label:"City Contributor", sub:"5 community AQI reports",  color:"#ff7350", done:false, pts:300},
 ];
 
 const WEEK_SCORES = [72, 65, 80, 58, 77, 88, 74];
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
-(function init() {
+/* ── Init ── */
+(function init(){
   const raw = localStorage.getItem("gp_user");
-  if (!raw) { window.location.href = "login.html"; return; }
-  const u = JSON.parse(raw);
+  const u = raw ? JSON.parse(raw) : {name:"Guest",email:"",city:"Bengaluru",joined:"2025"};
 
-  // Fill profile
-  document.getElementById("prof-name").textContent  = u.name || "User";
-  document.getElementById("prof-email").textContent = u.email || "";
-  document.getElementById("prof-city").textContent  = u.city  || "Bengaluru";
-  document.getElementById("prof-since").textContent = `Since ${u.joinedDate || "2025"}`;
+  // Profile info
+  document.getElementById("p-name").textContent  = u.name  || "User";
+  document.getElementById("p-email").textContent = u.email || "";
+  document.getElementById("p-city").textContent  = u.city  || "Bengaluru";
+  document.getElementById("p-since").textContent = `Since ${u.joined || "2025"}`;
 
-  const av = document.getElementById("avatar-circle");
-  av.textContent = (u.avatar || (u.name||"U").charAt(0)).toUpperCase();
+  // Avatar initial
+  const letter = (u.name || "U").charAt(0).toUpperCase();
+  document.getElementById("av-letter").textContent = letter;
 
-  // Stats
-  document.getElementById("stat-journeys").textContent = u.journeys || 0;
-  document.getElementById("stat-co2").innerHTML       = `${u.co2Saved||0}<span style="font-size:.75rem;font-weight:600;color:#ababac;">g</span>`;
-  document.getElementById("stat-lungs").textContent   = u.lungsAvg || "—";
+  // Stats (seeded from email for consistency)
+  const seed = (u.email||"x").charCodeAt(0) || 66;
+  const journeys = (seed * 3 % 52) + 8;
+  const co2      = (seed * 13 % 800) + 120;
+  const lungs    = 55 + (seed % 30);
+  document.getElementById("sc-journeys").textContent = journeys;
+  document.getElementById("sc-co2").innerHTML = `${co2}<span style="font-size:.85rem;font-weight:600;color:#ababac;">g</span>`;
+  document.getElementById("sc-lungs").textContent = lungs;
 
-  // Avatar ring progress (journeys/30 capped)
-  const pct = Math.min(100, ((u.journeys||0)/30)*100);
-  const r = 34, circ = 2*Math.PI*r;
-  document.getElementById("avatar-ring").setAttribute("stroke-dashoffset", circ - (pct/100)*circ);
+  // Avatar ring progress
+  const pct = Math.min(100,(journeys/50)*100);
+  const circ = 2 * Math.PI * 30;
+  setTimeout(()=>{
+    document.getElementById("av-ring").setAttribute("stroke-dashoffset", circ - (pct/100)*circ);
+  }, 400);
 
   // Badges
-  document.getElementById("badges-grid").innerHTML = BADGES.map(b => `
-    <div class="badge-card" style="border-color:${b.unlocked?b.color+"28":"rgba(255,255,255,.04)"};opacity:${b.unlocked?1:.45};">
-      <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:${b.color}18;border:1.5px solid ${b.color}${b.unlocked?"44":"22"};display:flex;align-items:center;justify-content:center;">
-        <span class="material-symbols-outlined" style="font-size:18px;color:${b.unlocked?b.color:"#ababac"};font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">${b.icon}</span>
+  document.getElementById("badge-grid").innerHTML = BADGES.map(b=>`
+    <div class="bdg" style="border-color:${b.unlocked?b.color+"28":"rgba(255,255,255,.04)"};opacity:${b.unlocked?1:.45};">
+      <div class="bdg-icon" style="background:${b.color}18;border:1.5px solid ${b.color}${b.unlocked?"44":"22"};">
+        <span style="font-size:1.125rem;">${b.emoji}</span>
       </div>
-      <div style="font-size:.72rem;font-weight:700;color:${b.unlocked?"#fff":"#ababac"};line-height:1.2;">${b.label}</div>
-      <div style="font-size:.62rem;color:#ababac;">${b.desc}</div>
-      ${!b.unlocked?`<div style="font-size:.6rem;color:#ababac;background:rgba(255,255,255,.06);padding:.12rem .4rem;border-radius:999px;">Locked</div>`:""}
+      <div class="bdg-name" style="color:${b.unlocked?"#fff":"#ababac"};">${b.label}</div>
+      <div class="bdg-sub">${b.desc}</div>
+      ${!b.unlocked?'<div class="bdg-locked">🔒 Locked</div>':'<div style="font-size:.6rem;color:#3fff8b;font-weight:700;">✓ Earned</div>'}
     </div>`).join("");
 
   // Achievements
-  document.getElementById("achievements-list").innerHTML = ACHIEVEMENTS.map(a => `
-    <div class="achievement" style="border-color:${a.done?a.color+"22":"rgba(255,255,255,.05)"};opacity:${a.done?1:.55};">
-      <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:${a.color}14;border:1.5px solid ${a.color}${a.done?"38":"18"};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <span class="material-symbols-outlined" style="font-size:18px;color:${a.done?a.color:"#ababac"};font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">${a.icon}</span>
+  document.getElementById("ach-list").innerHTML = ACHIEVEMENTS.map(a=>`
+    <div class="ach-row" style="opacity:${a.done?1:.5};">
+      <div class="ach-icon" style="background:${a.color}15;border:1.5px solid ${a.color}${a.done?"38":"18"};">
+        <span style="font-size:1.125rem;">${a.emoji}</span>
       </div>
       <div style="flex:1;min-width:0;">
-        <div style="font-weight:700;font-size:.85rem;">${a.label}</div>
-        <div style="font-size:.73rem;color:#ababac;margin-top:.15rem;">${a.sub}</div>
+        <div style="font-weight:700;font-size:.875rem;">${a.label}</div>
+        <div style="font-size:.72rem;color:#ababac;margin-top:.1rem;">${a.sub}</div>
       </div>
-      <div style="flex-shrink:0;text-align:right;">
-        <div style="font-size:.8rem;font-weight:800;color:${a.color};">+${a.pts}</div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:.875rem;font-weight:900;color:${a.color};">+${a.pts}</div>
         <div style="font-size:.6rem;color:#ababac;">pts</div>
       </div>
     </div>`).join("");
 
-  // Weekly bar chart
+  // Weekly chart
   const maxS = Math.max(...WEEK_SCORES);
-  document.getElementById("week-chart").innerHTML = WEEK_SCORES.map((s,i) => {
+  document.getElementById("week-bars").innerHTML = WEEK_SCORES.map(s=>{
+    const col = s>=75?"#3fff8b":s>=55?"#ffbd5c":"#ff7350";
     const hPct = (s/maxS)*100;
-    const col  = s>=75?"#3fff8b":s>=55?"#ffbd5c":"#ff7350";
-    return `
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:.25rem;">
-      <div style="font-size:.62rem;font-weight:700;color:${col};">${s}</div>
-      <div style="width:100%;border-radius:.5rem .5rem 0 0;background:${col}22;position:relative;overflow:hidden;" data-h="${hPct}">
-        <div class="bar-fill" style="position:absolute;bottom:0;left:0;right:0;height:0;background:linear-gradient(to top,${col},${col}88);border-radius:.5rem .5rem 0 0;transition:height .9s cubic-bezier(.4,0,.2,1);"></div>
+    return `<div class="wbar-wrap">
+      <div class="wbar-val" style="color:${col};">${s}</div>
+      <div class="wbar-bg" style="height:52px;background:${col}18;" data-h="${hPct}">
+        <div class="wbar-fill" style="background:linear-gradient(to top,${col},${col}99);"></div>
       </div>
-    </div>`;}).join("");
+    </div>`;
+  }).join("");
 
-  // Animate bars after paint
-  setTimeout(() => {
-    document.querySelectorAll("[data-h]").forEach(el => {
-      const h = parseFloat(el.dataset.h);
-      el.style.height = (h * 0.7) + "px";
-      el.querySelector(".bar-fill").style.height = "100%";
+  document.getElementById("week-days").innerHTML = DAYS.map(d=>`<span>${d}</span>`).join("");
+
+  // Animate bars
+  setTimeout(()=>{
+    document.querySelectorAll(".wbar-fill").forEach((el,i)=>{
+      const h = parseFloat(el.parentElement.dataset.h);
+      el.style.height = h + "%";
     });
-  }, 300);
+  }, 350);
 })();
 
-function showEditModal() {
-  const u = JSON.parse(localStorage.getItem("gp_user") || "{}");
+/* ── Edit modal ── */
+function openEdit(){
+  const u = JSON.parse(localStorage.getItem("gp_user")||"{}");
   document.getElementById("edit-name").value = u.name || "";
   document.getElementById("edit-city").value = u.city || "";
   document.getElementById("edit-modal").style.display = "flex";
 }
-function closeEdit() { document.getElementById("edit-modal").style.display = "none"; }
-function saveEdit() {
-  const u = JSON.parse(localStorage.getItem("gp_user") || "{}");
-  u.name = document.getElementById("edit-name").value.trim() || u.name;
-  u.city = document.getElementById("edit-city").value.trim() || u.city;
-  u.avatar = u.name.charAt(0).toUpperCase();
+function closeEdit(){
+  document.getElementById("edit-modal").style.display = "none";
+}
+function saveEdit(){
+  const u = JSON.parse(localStorage.getItem("gp_user")||"{}");
+  const name = document.getElementById("edit-name").value.trim();
+  const city = document.getElementById("edit-city").value.trim();
+  if(name) u.name = name;
+  if(city) u.city = city;
   localStorage.setItem("gp_user", JSON.stringify(u));
-  document.getElementById("prof-name").textContent = u.name;
-  document.getElementById("prof-city").textContent = u.city;
-  document.getElementById("avatar-circle").textContent = u.avatar;
+  document.getElementById("p-name").textContent = u.name;
+  document.getElementById("p-city").textContent = u.city;
+  document.getElementById("av-letter").textContent = (u.name||"U").charAt(0).toUpperCase();
   closeEdit();
 }
-function doLogout() {
-  localStorage.removeItem("gp_user");
-  window.location.href = "login.html";
+
+/* ── Prefs ── */
+function savePref(key, val){
+  const p = JSON.parse(localStorage.getItem("gp_prefs")||"{}");
+  p[key] = val;
+  localStorage.setItem("gp_prefs", JSON.stringify(p));
+}
+
+/* ── Logout ── */
+function doLogout(){
+  if(confirm("Sign out of GreenPulse?")){
+    localStorage.removeItem("gp_user");
+    window.location.href = "login.html";
+  }
 }
 </script>
-</div>
 </body>
 </html>
