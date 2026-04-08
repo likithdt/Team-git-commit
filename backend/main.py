@@ -18,6 +18,9 @@ from database import init_db
 load_dotenv()
 init_db()
 
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+OPENWEATHERMAP_API_KEY = os.getenv("OPENWEATHERMAP_API_KEY")
+
 class UserSignup(BaseModel):
     name: str
     email: str
@@ -68,6 +71,12 @@ def _aqi_category(aqi: int) -> dict:
     if aqi <= 200:
         return {"label": "Unhealthy", "color": "#ff716c", "glow": "red"}
     return {"label": "Hazardous", "color": "#9f0519", "glow": "red"}
+
+def get_db():
+    # Connects to the file we just created
+    conn = sqlite3.connect('greenpulse.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def get_db_conn():
     conn = sqlite3.connect('greenpulse.db')

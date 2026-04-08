@@ -228,21 +228,34 @@
 
   <script src="assets/app.js"></script>
   <script>
-    buildBottomNav("dashboard");
-
-    if (!localStorage.getItem("gp_user")) {
-      window.location.href = "signin.html";
+    // 1. AUTH GUARD: Check this immediately before anything else runs
+    const user = JSON.parse(localStorage.getItem("gp_user"));
+    if (!user) {
+      window.location.href = "login.html"; // Redirect to your login page
     }
+
+    // 2. BUILD UI
+    buildBottomNav("dashboard");
 
     const API_URL = "http://localhost:8000";
 
     (async () => {
       try {
+        // Fetch live data from your FastAPI backend
         const d = await API.dashboard();
+
+        // Render the Score Ring (The large circle at the top)
         renderScoreRing("score-ring", d.lungs_score);
-        document.getElementById("greeting").textContent = `${d.greeting}, ${d.city}.`;
+
+        // PERSONALIZED GREETING: Uses name from DB + City from API
+        document.getElementById("greeting").textContent = `Hello ${user.name}, welcome to ${d.city}.`;
+
         const cat = d.aqi_category;
+
+        // UPDATE SCORE DESCRIPTION
         document.getElementById("score-desc").textContent = `Air quality is ${cat.label.toLowerCase()}. AQI ${d.aqi} — ${d.lungs_score >= 70 ? "Great day for a walk!" : d.lungs_score >= 45 ? "Consider a clean route." : "Limit outdoor exposure."}`;
+
+        // UPDATE STAT CARDS
         document.getElementById("st-aqi").textContent = d.aqi;
         document.getElementById("st-aqi").style.color = cat.color;
         document.getElementById("st-aqi-l").textContent = cat.label;
@@ -250,23 +263,35 @@
         document.getElementById("st-desc").textContent = d.description;
         document.getElementById("st-pm").textContent = d.pm25;
         document.getElementById("st-wind").textContent = d.wind_speed;
+
+        // UPDATE COMMUNITY STATS
         document.getElementById("st-comm").textContent = d.active_commuters.toLocaleString();
         document.getElementById("st-avoid").textContent = d.pollution_avoided_today;
-        setTimeout(() => { document.getElementById("avoid-bar").style.width = Math.min(100, (d.pollution_avoided_today / 340) * 100) + "%"; }, 300);
+
+        // ANIMATE THE PROGRESS BAR
+        setTimeout(() => {
+          const avoidBar = document.getElementById("avoid-bar");
+          if (avoidBar) avoidBar.style.width = Math.min(100, (d.pollution_avoided_today / 340) * 100) + "%";
+        }, 300);
+
+        // SHOW CTA & AI INSIGHTS
         const lc = document.getElementById("leave-cta");
-        lc.style.display = "flex";
+        if (lc) lc.style.display = "flex";
         document.getElementById("leave-time").textContent = d.best_leave_in_min === 0 ? "Leave now — cleanest air now" : `In ${d.best_leave_in_min} minutes`;
+
         const ai = document.getElementById("ai-insight");
-        ai.style.display = "block";
+        if (ai) ai.style.display = "block";
         document.getElementById("ai-text").textContent = `Current AQI is ${d.aqi} (${cat.label}). ${d.aqi <= 60 ? "Excellent conditions — ideal for cycling or walking." : "Take the Green Artery route to cut your PM2.5 exposure by up to 35%."}`;
+
       } catch (e) {
-        document.getElementById("greeting").textContent = "Backend offline";
-        document.getElementById("score-desc").textContent = "Start the FastAPI server to see live data.";
+        console.error("Dashboard Load Error:", e);
+        document.getElementById("greeting").textContent = "Connection Lost";
+        document.getElementById("score-desc").textContent = "Please check if your FastAPI backend is running on port 8000.";
       }
     })();
   </script>
+
   <nav id="bottom-nav"></nav>
-  <script src="assets/app.js"></script>
 </body>
 
 </html>
