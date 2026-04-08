@@ -1,9 +1,3 @@
-This is a much more detailed and "pitch-ready" version than the previous draft. It’s perfect for the judges because it clearly explains the **"Why"** and the **"How."**
-
-I have formatted this specifically for a GitHub `README.md`. You can copy the content below and overwrite your current file.
-
----
-
 # GreenPulse
 ### AI-Powered Micro-Climate & Commute Optimizer
 **Developed for INNOVATEX 4.0: BuildWithAI 24-Hour Hackathon** *Organized by Presidency University, Bengaluru*
