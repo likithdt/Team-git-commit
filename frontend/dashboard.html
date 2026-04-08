@@ -230,6 +230,12 @@
   <script>
     buildBottomNav("dashboard");
 
+    if (!localStorage.getItem("gp_user")) {
+      window.location.href = "signin.html";
+    }
+
+    const API_URL = "http://localhost:8000";
+
     (async () => {
       try {
         const d = await API.dashboard();

@@ -271,6 +271,11 @@
   <script>
     buildBottomNav("profile");
 
+    function logout() {
+      localStorage.removeItem("gp_user"); // Deletes the session
+      window.location.href = "signin.html"; // Redirects
+    }
+
     const BADGES = [
       { icon: "eco", label: "Green Starter", desc: "First healthy route", color: "#3fff8b", unlocked: true },
       { icon: "air", label: "Clean Air Hero", desc: "10 low-AQI journeys", color: "#3fff8b", unlocked: true },
