@@ -362,10 +362,13 @@
     })();
 
     function showEditModal() {
-      const u = JSON.parse(localStorage.getItem("gp_user") || "{}");
-      document.getElementById("edit-name").value = u.name || "";
-      document.getElementById("edit-city").value = u.city || "";
-      document.getElementById("edit-modal").style.display = "flex";
+      const user = JSON.parse(localStorage.getItem("gp_user"));
+      if (user) {
+        document.getElementById('user-name').innerText = user.name;
+        document.getElementById('stat-journeys').innerText = user.journeys;
+        document.getElementById('stat-co2').innerText = `${user.co2_saved}g`;
+        document.getElementById('stat-lungs').innerText = `${user.lungs_avg}%`;
+      }
     }
     function closeEdit() { document.getElementById("edit-modal").style.display = "none"; }
     function saveEdit() {
