@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>GreenPulse | Login</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#3fff8b",
+            "background": "#0d0e0f",
+            "surface-container": "#181a1b",
+            "on-surface-variant": "#ababac",
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0d0e0f;
+      font-family: 'Inter', sans-serif;
+      background-image: radial-gradient(circle at 50% -20%, #064e3b 0%, #0d0e0f 80%);
+    }
+
+    .glass-card {
+      background: rgba(18, 19, 21, 0.6);
+      backdrop-filter: blur(40px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .glass-reflection {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+    }
+
+    .input-field {
+      background: rgba(255, 255, 255, 0.03) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: white !important;
+      transition: all 0.3s ease;
+    }
+
+    .input-field:focus {
+      border-color: #3fff8b !important;
+      box-shadow: 0 0 0 2px rgba(63, 255, 139, 0.2);
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .btn-glow {
+      box-shadow: 0 10px 30px rgba(63, 255, 139, 0.3);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-6">
+
+  <div class="glass-card relative overflow-hidden rounded-[2.5rem] w-full max-w-md p-10 group">
+    <div
+      class="absolute -right-20 -top-20 w-48 h-48 bg-primary/10 blur-[80px] rounded-full group-hover:bg-primary/20 transition-colors">
+    </div>
+
+    <div class="relative z-10">
+      <div class="flex flex-col items-center mb-10">
+        <div class="bg-emerald-500/10 p-4 rounded-2xl mb-4">
+          <span class="material-symbols-outlined text-primary text-4xl"
+            style="font-variation-settings: 'FILL' 1;">eco</span>
+        </div>
+        <h1 class="text-3xl font-800 text-white tracking-tighter">GreenPulse</h1>
+        <p class="text-on-surface-variant text-xs font-bold uppercase tracking-[0.2em] mt-2">
+          Personal Environment Tracker</p>
+      </div>
+
+      <form id="authForm" class="space-y-6">
+        <div class="space-y-2">
+          <label class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1">Email
+            Address</label>
+          <input type="email" id="email" class="input-field rounded-xl w-full py-4 px-5 text-sm"
+            placeholder="name@domain.com" required>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest ml-1">Password</label>
+          <input type="password" id="password" class="input-field rounded-xl w-full py-4 px-5 text-sm"
+            placeholder="••••••••" required>
+        </div>
+
+        <button type="submit"
+          class="w-full py-5 rounded-2xl bg-gradient-to-r from-primary to-emerald-400 text-emerald-950 font-800 text-sm uppercase tracking-widest btn-glow relative overflow-hidden active:scale-[0.98] transition-all duration-200 mt-4">
+          <div class="absolute inset-0 glass-reflection opacity-40"></div>
+          <span class="relative z-10">Log In</span>
+        </button>
+      </form>
+
+      <div class="mt-10 text-center">
+        <p class="text-on-surface-variant text-xs font-medium">
+          <span>New to the pulse?</span>
+          <a href="signup.html"
+            class="text-primary font-800 ml-2 hover:underline decoration-primary/30 underline-offset-4">Create
+            Account</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:8000";
+
+    document.getElementById('authForm').onsubmit = async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+      };
+
+      try {
+        const resp = await fetch(API_URL + "/api/login", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json();
+
+        if (resp.ok) {
+          // Store full user object for Profile and Dashboard compatibility
+          localStorage.setItem("gp_user", JSON.stringify(data.user));
+          window.location.href = "dashboard.html";
+        } else {
+          alert(data.detail || "Invalid Email or Password");
+        }
+      } catch (err) {
+        alert("Connection Error: Is the FastAPI server running on port 8000?");
+        console.error(err);
+      }
+    };
+  </script>
+</body>
+
+</html>

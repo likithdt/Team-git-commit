@@ -1,57 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>GreenPulse — Plan Route</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="assets/styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
   <style>
-    .phone-frame{color:var(--on-surf);padding-bottom:80px;min-height:100dvh;}
-    .map-bg{position:fixed;inset:0;z-index:0;background:#070909;overflow:hidden;}
-    .map-grid{position:absolute;inset:0;opacity:.07;}
-    main{position:relative;z-index:1;padding:4.5rem 1rem 1.5rem;}
-    .route-aqi-bar{height:5px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;margin:.5rem 0;}
-    .route-aqi-fill{height:100%;border-radius:999px;transition:width .8s ease;}
+    .phone-frame {
+      color: var(--on-surf);
+      padding-bottom: 80px;
+      min-height: 100dvh;
+    }
+
+    .map-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: #070909;
+      overflow: hidden;
+    }
+
+    .map-grid {
+      position: absolute;
+      inset: 0;
+      opacity: .07;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      padding: 4.5rem 1rem 1.5rem;
+    }
+
+    .route-aqi-bar {
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .06);
+      overflow: hidden;
+      margin: .5rem 0;
+    }
+
+    .route-aqi-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width .8s ease;
+    }
   </style>
 </head>
+
 <body style="min-height:100dvh;">
 
 
   <!-- Map background -->
   <div class="map-bg">
     <svg class="map-grid" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-      <defs><pattern id="g" width="55" height="55" patternUnits="userSpaceOnUse">
-        <path d="M55 0L0 0 0 55" fill="none" stroke="#3fff8b" stroke-width=".6"/>
-      </pattern></defs>
-      <rect width="100%" height="100%" fill="url(#g)"/>
+      <defs>
+        <pattern id="g" width="55" height="55" patternUnits="userSpaceOnUse">
+          <path d="M55 0L0 0 0 55" fill="none" stroke="#3fff8b" stroke-width=".6" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#g)" />
     </svg>
     <!-- Route preview SVG -->
-    <svg id="route-svg" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M15% 85% Q 35% 55% 80% 18%" fill="none" stroke="#3fff8b" stroke-width="5" stroke-linecap="round" opacity=".5" style="filter:drop-shadow(0 0 8px #3fff8b)"/>
-      <path d="M15% 85% C 25% 65% 55% 40% 80% 18%" fill="none" stroke="#ffbd5c" stroke-width="3" stroke-linecap="round" opacity=".3"/>
-      <path d="M15% 85% C 5% 60% 65% 55% 80% 18%" fill="none" stroke="#ff7350" stroke-width="3" stroke-linecap="round" opacity=".22"/>
+    <svg id="route-svg" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none"
+      xmlns="http://www.w3.org/2000/svg">
+      <path d="M15% 85% Q 35% 55% 80% 18%" fill="none" stroke="#3fff8b" stroke-width="5" stroke-linecap="round"
+        opacity=".5" style="filter:drop-shadow(0 0 8px #3fff8b)" />
+      <path d="M15% 85% C 25% 65% 55% 40% 80% 18%" fill="none" stroke="#ffbd5c" stroke-width="3" stroke-linecap="round"
+        opacity=".3" />
+      <path d="M15% 85% C 5% 60% 65% 55% 80% 18%" fill="none" stroke="#ff7350" stroke-width="3" stroke-linecap="round"
+        opacity=".22" />
     </svg>
-    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 20%,rgba(7,9,9,0.82) 80%);"></div>
+    <div
+      style="position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 20%,rgba(7,9,9,0.82) 80%);">
+    </div>
   </div>
 
   <!-- Top bar -->
   <header class="top-bar">
     <div style="display:flex;align-items:center;gap:.75rem;">
-      <a href="dashboard.html" style="width:2rem;height:2rem;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;text-decoration:none;color:#fff;flex-shrink:0;">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      <a href="dashboard.html"
+        style="width:2rem;height:2rem;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;text-decoration:none;color:#fff;flex-shrink:0;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+        </svg>
       </a>
-      <span style="font-size:1rem;font-weight:700;color:#3fff8b;text-shadow:0 0 10px rgba(63,255,139,.4);">Plan Route</span>
+      <span style="font-size:1rem;font-weight:700;color:#3fff8b;text-shadow:0 0 10px rgba(63,255,139,.4);">Plan
+        Route</span>
     </div>
-    <div style="display:flex;align-items:center;gap:.5rem;padding:.35rem .875rem;border-radius:999px;background:rgba(18,19,21,.7);border:1px solid rgba(255,255,255,.08);">
-      <div id="aqi-dot" style="width:8px;height:8px;border-radius:50%;background:#3fff8b;box-shadow:0 0 6px #3fff8b;"></div>
+    <div
+      style="display:flex;align-items:center;gap:.5rem;padding:.35rem .875rem;border-radius:999px;background:rgba(18,19,21,.7);border:1px solid rgba(255,255,255,.08);">
+      <div id="aqi-dot" style="width:8px;height:8px;border-radius:50%;background:#3fff8b;box-shadow:0 0 6px #3fff8b;">
+      </div>
       <span style="font-size:.7rem;font-weight:600;color:#ababac;">AQI <span id="hdr-aqi">—</span></span>
     </div>
   </header>
 
   <main>
     <!-- Search panel -->
-    <section class="glass" style="border-radius:1.5rem;padding:1.25rem;margin-bottom:.875rem;border:1px solid rgba(255,255,255,.06);">
+    <section class="glass"
+      style="border-radius:1.5rem;padding:1.25rem;margin-bottom:.875rem;border:1px solid rgba(255,255,255,.06);">
       <h1 style="font-size:1.5rem;font-weight:800;letter-spacing:-.03em;margin-bottom:1rem;">
         Find your <span style="color:#3fff8b;text-shadow:0 0 12px rgba(63,255,139,.4);">cleanest</span> path.
       </h1>
@@ -59,19 +109,28 @@
         <!-- Origin input with SVG icon -->
         <div class="field-wrap">
           <div class="field-icon">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="#5a5b5c"><circle cx="12" cy="12" r="4"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="#5a5b5c">
+              <circle cx="12" cy="12" r="4" />
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
+            </svg>
           </div>
-          <input id="origin-input" class="gp-input" type="text" placeholder="Starting point" value=""/>
+          <input id="origin-input" class="gp-input" type="text" placeholder="Starting point" value="" />
         </div>
         <!-- Destination input -->
         <div class="field-wrap">
           <div class="field-icon">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="#5a5b5c"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="#5a5b5c">
+              <path
+                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+            </svg>
           </div>
-          <input id="dest-input" class="gp-input" type="text" placeholder="Where are you going?"/>
+          <input id="dest-input" class="gp-input" type="text" placeholder="Where are you going?" />
         </div>
         <button class="btn-primary" id="plan-btn" onclick="planRoutes()">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
+          </svg>
           Generate AI Healthy Routes
         </button>
       </div>
@@ -93,20 +152,32 @@
 
     <!-- Results -->
     <div id="results-area">
-      <div class="glass" style="border-radius:1.5rem;padding:2.5rem 1rem;text-align:center;border:1px solid rgba(255,255,255,.05);">
-        <svg viewBox="0 0 24 24" width="48" height="48" fill="rgba(63,255,139,.3)" style="margin:0 auto .875rem;display:block;"><path d="M21 3L3 10.53v.98l6.84 2.65L12.48 21h.98L21 3z"/></svg>
-        <p style="color:#ababac;font-size:.875rem;">Enter a destination and tap <strong style="color:#fff;">Generate Routes</strong></p>
+      <div class="glass"
+        style="border-radius:1.5rem;padding:2.5rem 1rem;text-align:center;border:1px solid rgba(255,255,255,.05);">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="rgba(63,255,139,.3)"
+          style="margin:0 auto .875rem;display:block;">
+          <path d="M21 3L3 10.53v.98l6.84 2.65L12.48 21h.98L21 3z" />
+        </svg>
+        <p style="color:#ababac;font-size:.875rem;">Enter a destination and tap <strong style="color:#fff;">Generate
+            Routes</strong></p>
       </div>
     </div>
 
     <!-- Departure window -->
-    <div id="window-card" style="display:none;margin-top:.875rem;" class="glass" style="border-radius:1.5rem;padding:1rem 1.125rem;border:1px solid rgba(63,255,139,.15);">
+    <div id="window-card" style="display:none;margin-top:.875rem;" class="glass"
+      style="border-radius:1.5rem;padding:1rem 1.125rem;border:1px solid rgba(63,255,139,.15);">
       <div style="display:flex;align-items:center;gap:.875rem;">
-        <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:rgba(63,255,139,.15);border:1.5px solid rgba(63,255,139,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="#3fff8b"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+        <div
+          style="width:2.5rem;height:2.5rem;border-radius:50%;background:rgba(63,255,139,.15);border:1.5px solid rgba(63,255,139,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="#3fff8b">
+            <path
+              d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z" />
+          </svg>
         </div>
         <div>
-          <div style="font-size:.6rem;color:#3fff8b;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.15rem;">AI Departure Window</div>
+          <div
+            style="font-size:.6rem;color:#3fff8b;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.15rem;">
+            AI Departure Window</div>
           <div id="win-text" style="font-weight:700;font-size:.9375rem;"></div>
           <div id="win-insight" style="font-size:.75rem;color:#ababac;margin-top:.1rem;line-height:1.4;"></div>
         </div>
@@ -115,58 +186,75 @@
   </main>
 
   <nav id="bottom-nav"></nav>
-</div>
+  </div>
 
-<script src="assets/app.js"></script>
-<script>
-buildBottomNav("route");
+  <script src="assets/app.js"></script>
+  <script>
+    buildBottomNav("route");
 
-// Load AQI on start
-(async()=>{
-  try{
-    const d=await API.dashboard();
-    document.getElementById("hdr-aqi").textContent=d.aqi;
-    document.getElementById("aqi-dot").style.background=d.aqi_category.color;
-    document.getElementById("aqi-dot").style.boxShadow=`0 0 6px ${d.aqi_category.color}`;
-    document.getElementById("s-aqi").textContent=d.aqi;
-    document.getElementById("s-aqi").style.color=d.aqi_category.color;
-    document.getElementById("s-aqi-cat").textContent=d.aqi_category.label;
-    document.getElementById("s-traffic").textContent=d.aqi<60?"Low":d.aqi<120?"Moderate":"High";
-    document.getElementById("s-temp").textContent=`${d.temperature}°C`;
-  }catch(_){}
-})();
+    // Load AQI on start
+    (async () => {
+      try {
+        const d = await API.dashboard();
+        document.getElementById("hdr-aqi").textContent = d.aqi;
+        document.getElementById("aqi-dot").style.background = d.aqi_category.color;
+        document.getElementById("aqi-dot").style.boxShadow = `0 0 6px ${d.aqi_category.color}`;
+        document.getElementById("s-aqi").textContent = d.aqi;
+        document.getElementById("s-aqi").style.color = d.aqi_category.color;
+        document.getElementById("s-aqi-cat").textContent = d.aqi_category.label;
+        document.getElementById("s-traffic").textContent = d.aqi < 60 ? "Low" : d.aqi < 120 ? "Moderate" : "High";
+        document.getElementById("s-temp").textContent = `${d.temperature}°C`;
+      } catch (_) { }
+    })();
 
-async function planRoutes(){
-  const orig=document.getElementById("origin-input").value.trim();
-  const dest=document.getElementById("dest-input").value.trim();
-  if(!dest){
-    document.getElementById("dest-input").style.borderColor="rgba(255,113,80,.6)";
-    document.getElementById("dest-input").focus();
-    setTimeout(()=>document.getElementById("dest-input").style.borderColor="",2000);
-    return;
-  }
-  const origin=orig||"Current Location";
-  const btn=document.getElementById("plan-btn");
-  btn.disabled=true;
-  btn.innerHTML=`<div style="width:18px;height:18px;border:2px solid var(--on-pri);border-top-color:transparent;border-radius:50%;" class="spin"></div> Analysing with Gemini AI…`;
+    async function planRoutes() {
+      const orig = document.getElementById("origin-input").value.trim();
+      const dest = document.getElementById("dest-input").value.trim();
+      if (!dest) {
+        document.getElementById("dest-input").style.borderColor = "rgba(255,113,80,.6)";
+        document.getElementById("dest-input").focus();
+        setTimeout(() => document.getElementById("dest-input").style.borderColor = "", 2000);
+        return;
+      }
+      const origin = orig || "Current Location";
+      const btn = document.getElementById("plan-btn");
+      btn.disabled = true;
+      btn.innerHTML = `<div style="width:18px;height:18px;border:2px solid var(--on-pri);border-top-color:transparent;border-radius:50%;" class="spin"></div> Analysing with Gemini AI…`;
 
-  const area=document.getElementById("results-area");
-  showLoading(area,"Running multi-criteria health analysis…");
+      const area = document.getElementById("results-area");
+      showLoading(area, "Running multi-criteria health analysis…");
 
-  try{
-    const data=await API.routes(origin,dest);
-    renderRoutes(data,origin,dest);
-  }catch(e){
-    showError(area,"Could not reach GreenPulse API.");
-  }finally{
-    btn.disabled=false;
-    btn.innerHTML=`<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> Generate AI Healthy Routes`;
-  }
-}
+      try {
+        const data = await API.routes(origin, dest);
+        renderRoutes(data, origin, dest);
+      } catch (e) {
+        showError(area, "Could not reach GreenPulse API.");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> Generate AI Healthy Routes`;
+      }
+    }
 
-function renderRoutes(data,orig,dest){
-  const area=document.getElementById("results-area");
-  area.innerHTML=data.ranked_routes.map((r,i)=>`
+    function selectRoute(rank) {
+      // 1. Get the route data (from the Gemini response)
+      const selectedRoute = currentRoutes.find(r => r.rank === rank);
+
+      // 2. Store it temporarily in localStorage so journey.html can access it
+      localStorage.setItem("active_journey", JSON.stringify({
+        rank: selectedRoute.rank,
+        co2_saved: selectedRoute.co2_saved,
+        lungs_score: selectedRoute.lungs_score,
+        origin: document.getElementById('origin').value,
+        destination: document.getElementById('destination').value
+      }));
+
+      // 3. Move to the journey page
+      window.location.href = "journey.html";
+    }
+
+    function renderRoutes(data, orig, dest) {
+      const area = document.getElementById("results-area");
+      area.innerHTML = data.ranked_routes.map((r, i) => `
     <a href="journey.html?rank=${r.rank}&origin=${encodeURIComponent(orig)}&dest=${encodeURIComponent(dest)}"
        class="route-card glass"
        style="margin-bottom:.75rem;border:1px solid ${r.color}20;"
@@ -196,7 +284,7 @@ function renderRoutes(data,orig,dest){
           ${r.co2_saved_g}g CO₂
         </span>
       </div>
-      <div class="route-aqi-bar"><div class="route-aqi-fill" style="width:${Math.min(100,(r.aqi_avg/200)*100)}%;background:${r.color};"></div></div>
+      <div class="route-aqi-bar"><div class="route-aqi-fill" style="width:${Math.min(100, (r.aqi_avg / 200) * 100)}%;background:${r.color};"></div></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.375rem;">
         <span style="font-size:.75rem;color:#ababac;">AQI ${r.aqi_avg}</span>
         <span style="font-size:.75rem;color:${r.color}88;">${r.leave_window}</span>
@@ -205,12 +293,16 @@ function renderRoutes(data,orig,dest){
     </a>
   `).join("");
 
-  // Departure window card
-  const wc=document.getElementById("window-card");
-  wc.style.display="block";
-  document.getElementById("win-text").textContent=data.best_window_minutes===0?"Leave now — air is cleanest!":`Best to leave in ${data.best_window_minutes} minutes.`;
-  document.getElementById("win-insight").textContent=data.ai_insight||"";
-}
-</script>
+      // Departure window card
+      const wc = document.getElementById("window-card");
+      wc.style.display = "block";
+      document.getElementById("win-text").textContent = data.best_window_minutes === 0 ? "Leave now — air is cleanest!" : `Best to leave in ${data.best_window_minutes} minutes.`;
+      document.getElementById("win-insight").textContent = data.ai_insight || "";
+    }
+  </script>
+  <nav id="bottom-nav"
+    class="fixed bottom-0 left-0 right-0 bg-[#121315]/80 backdrop-blur-lg border-t border-white/5 flex justify-around items-center py-3 px-2 z-50">
+  </nav>
 </body>
+
 </html>
