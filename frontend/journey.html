@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>GreenPulse — Navigation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    html,body{overflow:hidden;height:100dvh;}
+
+    /* ── Full-screen map as base ── */
+    #map{position:fixed;inset:0;z-index:0;}
+
+    /* ── Floating top bar ── */
+    #nav-topbar{
+      position:fixed;top:0;left:0;right:0;z-index:300;
+      padding:.75rem 1rem .5rem;
+      background:linear-gradient(to bottom,rgba(7,10,9,.96) 60%,transparent);
+      pointer-events:none;
+    }
+    #nav-topbar .inner{
+      display:flex;align-items:center;gap:.75rem;
+      pointer-events:auto;
+    }
+    .nav-back-btn{
+      width:2.5rem;height:2.5rem;border-radius:50%;
+      background:rgba(10,13,11,.88);border:1px solid rgba(255,255,255,.12);
+      backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;
+      cursor:pointer;flex-shrink:0;border:none;color:#fff;
+    }
+    .nav-pill{
+      flex:1;background:rgba(10,13,11,.88);backdrop-filter:blur(16px);
+      border-radius:1rem;padding:.625rem 1rem;border:1px solid rgba(63,255,139,.18);
+      min-width:0;
+    }
+
+    /* ── Bottom sheet — 3 snap positions ── */
+    #nav-sheet{
+      position:fixed;left:0;right:0;z-index:300;
+      background:rgba(10,13,11,.97);
+      border-radius:1.5rem 1.5rem 0 0;
+      border-top:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+      will-change:transform;
+      /* default: peeking — only next-step card visible */
+      bottom:0;
+      transform:translateY(0);
+      transition:transform .38s cubic-bezier(.32,.72,0,1);
+    }
+    .sheet-handle-wrap{padding:.625rem 0 0;display:flex;justify-content:center;cursor:grab;}
+    .sheet-handle{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,.22);}
+
+    /* ── Step card ── */
+    #step-card{
+      display:flex;align-items:center;gap:.875rem;
+      padding:.875rem 1rem 1rem;
+    }
+    .step-icon-ring{
+      width:3rem;height:3rem;border-radius:50%;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(63,255,139,.14);border:2px solid rgba(63,255,139,.35);
+      box-shadow:0 0 16px rgba(63,255,139,.2);
+    }
+    .step-dist{font-size:2rem;font-weight:900;line-height:1;flex-shrink:0;text-align:right;}
+    .step-dist span{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--on-sv);display:block;}
+
+    /* ── Stats strip ── */
+    #stats-strip{
+      display:grid;grid-template-columns:1fr 1fr 1fr;
+      gap:0;border-top:1px solid rgba(255,255,255,.06);
+    }
+    .strip-cell{display:flex;flex-direction:column;align-items:center;padding:.75rem .5rem;gap:.1rem;}
+    .strip-cell:not(:last-child){border-right:1px solid rgba(255,255,255,.06);}
+    .strip-cell .big{font-size:1.375rem;font-weight:900;line-height:1;}
+    .strip-cell .tiny{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--on-sv);}
+
+    /* ── Progress bar ── */
+    #prog-wrap{padding:.5rem 1rem .25rem;}
+    #prog-track{height:4px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;}
+    #prog-fill{height:100%;background:linear-gradient(90deg,#3fff8b,#13ea79);width:0%;transition:width .6s ease;box-shadow:0 0 6px rgba(63,255,139,.5);}
+
+    /* ── Expanded panel (scrollable milestones) ── */
+    #expanded-panel{
+      overflow-y:auto;max-height:45vh;
+      padding:0 1rem .5rem;
+      display:none;
+    }
+    #expanded-panel.visible{display:block;}
+
+    /* ── Route summary banner (before start) ── */
+    #route-summary{
+      position:fixed;bottom:0;left:0;right:0;z-index:300;
+      background:rgba(10,13,11,.97);
+      border-radius:1.5rem 1.5rem 0 0;
+      border-top:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(32px);
+      padding:1.25rem 1rem 2rem;
+      animation:slideUp .4s cubic-bezier(.32,.72,0,1);
+    }
+    @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+
+    /* ── Arrived overlay ── */
+    #arrived-ov{
+      display:none;position:fixed;inset:0;z-index:500;
+      background:rgba(7,9,10,.94);backdrop-filter:blur(24px);
+      align-items:center;justify-content:center;flex-direction:column;
+      animation:fadeIn .4s ease;
+    }
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+    /* ── Leaflet custom marker ── */
+    .user-dot{width:20px;height:20px;border-radius:50%;background:#3fff8b;border:3px solid #fff;box-shadow:0 0 0 5px rgba(63,255,139,.3),0 2px 8px rgba(0,0,0,.5);}
+    .dest-pin{display:flex;flex-direction:column;align-items:center;}
+    .dest-pin .circle{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3fff8b,#13ea79);border:2px solid #fff;box-shadow:0 0 20px rgba(63,255,139,.6),0 2px 8px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:16px;}
+    .dest-pin .stem{width:2px;height:10px;background:#3fff8b;box-shadow:0 0 5px rgba(63,255,139,.8);}
+    .wp-dot{width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#0d0e0f;font-family:Inter,sans-serif;}
+  </style>
+</head>
+<body style="background:#07090a;">
+
+<!-- LEAFLET MAP — full screen background -->
+<div id="map"></div>
+
+<!-- FLOATING TOP BAR -->
+<div id="nav-topbar">
+  <div class="inner">
+    <button class="nav-back-btn" onclick="handleBack()">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </button>
+    <div class="nav-pill">
+      <div id="tp-route" style="font-size:.9375rem;font-weight:800;color:#3fff8b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 10px rgba(63,255,139,.4);">Loading…</div>
+      <div id="tp-sub" style="font-size:.65rem;color:#ababac;margin-top:.1rem;">Calculating route</div>
+    </div>
+    <div id="tp-aqi" style="padding:.35rem .75rem;border-radius:999px;background:rgba(63,255,139,.12);border:1px solid rgba(63,255,139,.28);white-space:nowrap;flex-shrink:0;">
+      <div style="font-size:.65rem;font-weight:700;color:#3fff8b;">AQI <span id="tp-aqi-num">—</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ROUTE SUMMARY (shown before tapping Start) ═══ -->
+<div id="route-summary" style="display:none;">
+  <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;">
+    <div id="rs-ring" style="flex-shrink:0;position:relative;width:64px;height:64px;">
+      <svg viewBox="0 0 64 64" width="64" height="64" style="transform:rotate(-90deg)">
+        <circle cx="32" cy="32" r="26" fill="transparent" stroke="rgba(255,255,255,.07)" stroke-width="5"/>
+        <circle id="rs-arc" cx="32" cy="32" r="26" fill="transparent" stroke="#3fff8b" stroke-width="6" stroke-linecap="round"
+          stroke-dasharray="163" stroke-dashoffset="163" style="transition:stroke-dashoffset 1s ease;filter:drop-shadow(0 0 6px rgba(63,255,139,.7))"/>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:4px;">
+        <span id="rs-score" style="font-size:1.25rem;font-weight:900;color:#3fff8b;line-height:1;">—</span>
+        <span style="font-size:.45rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#ababac;">Lungs</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div id="rs-name" style="font-size:1.125rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+      <div id="rs-route" style="font-size:.75rem;color:#ababac;margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+      <div style="display:flex;gap:.875rem;margin-top:.5rem;font-size:.8125rem;">
+        <span style="display:flex;align-items:center;gap:.3rem;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="#ababac"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+          <span id="rs-min">—</span> min
+        </span>
+        <span style="display:flex;align-items:center;gap:.3rem;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="#ababac"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg>
+          <span id="rs-km">—</span> km
+        </span>
+        <span style="display:flex;align-items:center;gap:.3rem;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="#3fff8b"><path d="M17 8C8 10 5.9 16.17 3.82 21L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20c4 0 4-2 8-2s4 2 8 2V4c-1 0-3 .75-7 4z"/></svg>
+          <span id="rs-co2">—</span>g CO₂ saved
+        </span>
+      </div>
+    </div>
+  </div>
+  <div id="rs-tip" style="background:rgba(63,255,139,.07);border:1px solid rgba(63,255,139,.15);border-radius:1rem;padding:.75rem 1rem;font-size:.8rem;color:#ababac;line-height:1.5;margin-bottom:1rem;"></div>
+  <button class="btn-primary" onclick="startNavigation()" id="start-btn">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+    Start Navigation
+  </button>
+</div>
+
+<!-- ═══ LIVE NAV BOTTOM SHEET ═══ -->
+<div id="nav-sheet" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:300;background:rgba(10,13,11,.97);border-radius:1.5rem 1.5rem 0 0;border-top:1px solid rgba(255,255,255,.08);backdrop-filter:blur(32px);">
+  <!-- Drag handle -->
+  <div class="sheet-handle-wrap" id="sheet-drag">
+    <div class="sheet-handle"></div>
+  </div>
+
+  <!-- Next direction step -->
+  <div id="step-card">
+    <div class="step-icon-ring" id="step-icon-ring">
+      <svg id="step-svg" viewBox="0 0 24 24" width="22" height="22" fill="#3fff8b">
+        <path d="M21 3L3 10.53v.98l6.84 2.65L12.48 21h.98L21 3z"/>
+      </svg>
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#3fff8b;margin-bottom:.2rem;">Next</div>
+      <div id="step-name" style="font-size:1.05rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Calculating…</div>
+      <div id="step-sub" style="font-size:.7rem;color:#ababac;margin-top:.1rem;"></div>
+    </div>
+    <div style="text-align:right;flex-shrink:0;">
+      <div id="step-dist" style="font-size:1.75rem;font-weight:900;line-height:1;color:#fff;">—</div>
+      <div style="font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#ababac;">meters</div>
+    </div>
+  </div>
+
+  <!-- ETA / Lungs / Distance strip -->
+  <div id="stats-strip">
+    <div class="strip-cell">
+      <div class="tiny">ETA</div>
+      <div class="big" id="nav-eta">—</div>
+      <div class="tiny">min</div>
+    </div>
+    <div class="strip-cell">
+      <div class="tiny">Lungs Score</div>
+      <div class="big" id="nav-lungs" style="color:#3fff8b;text-shadow:0 0 8px rgba(63,255,139,.45);">—</div>
+      <div class="tiny">/100</div>
+    </div>
+    <div class="strip-cell">
+      <div class="tiny">Distance</div>
+      <div class="big" id="nav-dist">—</div>
+      <div class="tiny">km</div>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div id="prog-wrap">
+    <div style="display:flex;justify-content:space-between;font-size:.6rem;font-weight:600;color:#ababac;margin-bottom:.35rem;">
+      <span>Journey Progress</span><span id="nav-pct" style="color:#3fff8b;">0%</span>
+    </div>
+    <div id="prog-track"><div id="prog-fill"></div></div>
+  </div>
+
+  <!-- Expandable milestones panel -->
+  <div id="expanded-panel">
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#ababac;margin:.875rem 0 .5rem;">Route Waypoints</div>
+    <div id="milestone-list"></div>
+  </div>
+
+  <!-- AQI / health row -->
+  <div id="aqi-row" style="display:flex;align-items:center;justify-content:space-between;padding:.625rem 1rem .875rem;">
+    <div style="display:flex;align-items:center;gap:.5rem;">
+      <div id="aqi-dot-live" style="width:8px;height:8px;border-radius:50%;background:#3fff8b;box-shadow:0 0 6px #3fff8b;"></div>
+      <span id="aqi-label-live" style="font-size:.75rem;color:#ababac;">AQI Good</span>
+    </div>
+    <button onclick="closeNav()" style="background:rgba(255,113,80,.12);border:1px solid rgba(255,113,80,.25);color:#ff7350;padding:.35rem .875rem;border-radius:999px;font-size:.75rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;">End Trip</button>
+  </div>
+</div>
+
+<!-- ═══ ARRIVED OVERLAY ═══ -->
+<div id="arrived-ov" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(7,9,10,.94);backdrop-filter:blur(24px);display:none;flex-direction:column;align-items:center;justify-content:center;">
+  <div style="text-align:center;padding:2rem 1.5rem;max-width:320px;">
+    <div style="width:88px;height:88px;border-radius:50%;background:rgba(63,255,139,.12);border:2px solid rgba(63,255,139,.4);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 0 48px rgba(63,255,139,.25);">
+      <svg viewBox="0 0 24 24" width="44" height="44" fill="#3fff8b"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    </div>
+    <div style="font-size:2rem;font-weight:900;color:#3fff8b;text-shadow:0 0 24px rgba(63,255,139,.5);margin-bottom:.5rem;">You Arrived! 🌿</div>
+    <div id="arr-txt" style="color:#ababac;font-size:.9rem;line-height:1.6;margin-bottom:2rem;"></div>
+    <button onclick="closeNav()" style="padding:.875rem 2.5rem;background:linear-gradient(135deg,#3fff8b,#13ea79);color:#004f24;font-weight:800;font-size:.9375rem;border:none;border-radius:1rem;cursor:pointer;box-shadow:0 8px 24px rgba(63,255,139,.35);">Back to Routes</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="assets/app.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════
+   GreenPulse — Zomato/Zepto-style Live Navigation
+═══════════════════════════════════════════════════════════ */
+
+let journeyData=null, leafletMap=null, routeLayer=null, userMarker=null;
+let navIv=null, navProg=0, curStepIdx=0, routeSteps=[], routeCoords=[];
+let sheetExpanded=false, summaryShowing=false;
+
+const params = new URLSearchParams(location.search);
+const RANK = parseInt(params.get("rank")||"1");
+const ORIG = decodeURIComponent(params.get("origin")||"MG Road");
+const DEST = decodeURIComponent(params.get("dest")||"Koramangala");
+
+/* ── Init map immediately in background ── */
+function initMap(){
+  leafletMap = L.map("map",{zoomControl:false,attributionControl:false}).setView([12.9716,77.5946],13);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{
+    subdomains:"abcd",maxZoom:20,attribution:"© CARTO"
+  }).addTo(leafletMap);
+  L.control.zoom({position:"topright"}).addTo(leafletMap);
+}
+initMap();
+
+/* ── Load journey data & show summary ── */
+(async()=>{
+  document.getElementById("tp-route").textContent=`${ORIG} → ${DEST}`;
+  document.getElementById("tp-sub").textContent="Loading route…";
+
+  try{
+    journeyData=await API.journey(RANK,ORIG,DEST);
+    const d=journeyData;
+    d._orig=ORIG; d._dest=DEST;
+
+    /* Top bar */
+    document.getElementById("tp-route").textContent=d.name;
+    document.getElementById("tp-sub").textContent=`${ORIG} → ${DEST}`;
+    document.getElementById("tp-aqi-num").textContent=d.aqi_avg;
+
+    /* Summary panel */
+    document.getElementById("rs-score").textContent=d.lungs_score;
+    document.getElementById("rs-name").textContent=d.name;
+    document.getElementById("rs-route").textContent=`${ORIG} → ${DEST}`;
+    document.getElementById("rs-min").textContent=d.duration_min;
+    document.getElementById("rs-km").textContent=d.distance_km;
+    document.getElementById("rs-co2").textContent=d.co2_saved_g;
+    document.getElementById("rs-tip").textContent=d.health_tip;
+    // Animate score ring
+    const arc=document.getElementById("rs-arc");
+    arc.style.stroke=d.color;
+    setTimeout(()=>{arc.style.strokeDashoffset=163*(1-d.lungs_score/100);},300);
+
+    /* Nav values */
+    document.getElementById("nav-lungs").textContent=d.lungs_score;
+    document.getElementById("nav-lungs").style.color=d.color;
+    document.getElementById("nav-dist").textContent=d.distance_km;
+    document.getElementById("nav-eta").textContent=d.duration_min;
+    document.getElementById("aqi-label-live").textContent=`AQI ${d.aqi_avg} — ${d.aqi_category.label}`;
+    document.getElementById("aqi-dot-live").style.background=d.aqi_category.color;
+    document.getElementById("aqi-dot-live").style.boxShadow=`0 0 6px ${d.aqi_category.color}`;
+
+    /* Milestone list */
+    document.getElementById("milestone-list").innerHTML=(d.milestones||[]).map((m,i)=>`
+      <div style="display:flex;align-items:flex-start;gap:.75rem;padding:.625rem 0;${i<d.milestones.length-1?'border-bottom:1px solid rgba(255,255,255,.05)':''}">
+        <div style="width:1.75rem;height:1.75rem;border-radius:50%;background:${m.aqi_category.color}20;border:1.5px solid ${m.aqi_category.color}55;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:${m.aqi_category.color};flex-shrink:0;margin-top:.1rem;">${m.step}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:.875rem;font-weight:600;">${m.location}</div>
+          <div style="font-size:.72rem;color:#ababac;margin-top:.1rem;">${m.action}</div>
+          <div style="font-size:.68rem;color:#ababac;margin-top:.1rem;">🌡 ${m.heat_index}°C</div>
+        </div>
+        <span style="padding:.15rem .5rem;border-radius:999px;font-size:.6rem;font-weight:700;border:1px solid ${m.aqi_category.color}44;background:${m.aqi_category.color}15;color:${m.aqi_category.color};flex-shrink:0;">AQI ${m.aqi}</span>
+      </div>`).join("");
+
+    /* Show summary */
+    document.getElementById("route-summary").style.display="block";
+    summaryShowing=true;
+
+    /* Draw route on map in background */
+    drawRoute();
+
+  }catch(e){
+    document.getElementById("tp-sub").textContent="Backend offline — run uvicorn main:app";
+    document.getElementById("route-summary").style.display="block";
+    document.getElementById("rs-name").textContent="Route unavailable";
+    document.getElementById("rs-tip").textContent="Start the FastAPI backend to load live route data.";
+  }
+})();
+
+/* ══════ GEOCODING — works globally ══════ */
+async function geocode(place){
+  const queries=[
+    `${place}, ${State.city||"Bengaluru"}, India`,
+    place
+  ];
+  for(const q of queries){
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,{
+        headers:{"Accept-Language":"en","User-Agent":"GreenPulse/1.0"}
+      });
+      const d=await r.json();
+      if(d.length) return[parseFloat(d[0].lat),parseFloat(d[0].lon)];
+    }catch(_){}
+  }
+  throw new Error(`Cannot geocode: ${place}`);
+}
+
+async function fetchRoute(from,to,wps=[]){
+  const pts=[from,...wps,to];
+  const coords=pts.map(([la,lo])=>`${lo},${la}`).join(";");
+  const r=await fetch(`https://router.project-osrm.org/route/v1/foot/${coords}?overview=full&geometries=geojson&steps=true`);
+  const d=await r.json();
+  if(d.code!=="Ok")throw new Error("OSRM failed");
+  return d.routes[0];
+}
+
+function aqiHex(a){return a<=50?"#3fff8b":a<=100?"#ffbd5c":a<=150?"#ff7350":"#ff716c";}
+
+async function drawRoute(){
+  if(!journeyData)return;
+  const d=journeyData;
+  try{
+    const[origPt,destPt]=await Promise.all([geocode(ORIG),geocode(DEST)]);
+    const milestones=d.milestones||[];
+    let wpPts=[];
+    try{wpPts=await Promise.all(milestones.slice(0,2).map(m=>geocode(m.location)));}catch(_){}
+
+    const route=await fetchRoute(origPt,destPt,wpPts);
+
+    /* Store for animation */
+    routeCoords=route.geometry.coordinates.map(([lo,la])=>[la,lo]);
+    routeSteps=(route.legs||[]).flatMap(l=>l.steps||[]).filter(s=>s.maneuver);
+
+    /* Clear old layers */
+    if(routeLayer) leafletMap.removeLayer(routeLayer);
+
+    /* Glow shadow */
+    L.polyline(routeCoords,{color:d.color,weight:12,opacity:.12,lineCap:"round"}).addTo(leafletMap);
+    /* Main route */
+    routeLayer=L.polyline(routeCoords,{color:d.color,weight:5,opacity:.92,lineCap:"round"}).addTo(leafletMap);
+
+    /* User marker */
+    if(userMarker) leafletMap.removeLayer(userMarker);
+    userMarker=L.marker(origPt,{icon:L.divIcon({className:"",iconSize:[20,20],iconAnchor:[10,10],html:'<div class="user-dot"></div>'}),zIndexOffset:1000}).addTo(leafletMap);
+
+    /* Waypoint markers */
+    milestones.slice(0,wpPts.length).forEach((m,i)=>{
+      if(!wpPts[i])return;
+      const col=aqiHex(m.aqi);
+      L.marker(wpPts[i],{icon:L.divIcon({className:"",iconSize:[28,28],iconAnchor:[14,14],
+        html:`<div class="wp-dot" style="background:${col};border-color:#fff;">${m.step}</div>`}),zIndexOffset:500})
+        .addTo(leafletMap)
+        .bindPopup(`<b>${m.location}</b><br><span style="color:${col};font-weight:700">AQI ${m.aqi}</span><br><span style="color:#888;font-size:11px">${m.action}</span>`,{className:"gp-popup"});
+    });
+
+    /* Destination */
+    L.marker(destPt,{icon:L.divIcon({className:"",iconSize:[34,44],iconAnchor:[17,44],
+      html:'<div class="dest-pin"><div class="circle">📍</div><div class="stem"></div></div>'}),zIndexOffset:900})
+      .addTo(leafletMap)
+      .bindPopup(`<b>${DEST}</b><br><span style="color:#3fff8b">Destination</span>`,{className:"gp-popup"});
+
+    /* Fit map */
+    leafletMap.fitBounds(routeLayer.getBounds(),{padding:[120,40]});
+
+    /* Update top bar */
+    const km=(route.distance/1000).toFixed(1);
+    const mn=Math.round(route.duration/60);
+    document.getElementById("tp-sub").textContent=`${km} km · ${mn} min walk`;
+    document.getElementById("rs-km").textContent=km;
+    document.getElementById("rs-min").textContent=mn;
+    document.getElementById("nav-dist").textContent=km;
+    document.getElementById("nav-eta").textContent=mn;
+
+  }catch(e){
+    console.warn("Route draw failed:",e);
+    document.getElementById("tp-sub").textContent=`${d.distance_km} km · ${d.duration_min} min`;
+    leafletMap.setView([State.lat||12.9716,State.lon||77.5946],13);
+  }
+}
+
+/* ══════ START NAVIGATION ══════ */
+function startNavigation(){
+  if(!journeyData)return;
+  document.getElementById("route-summary").style.display="none";
+  summaryShowing=false;
+  const sheet=document.getElementById("nav-sheet");
+  sheet.style.display="block";
+  showStep(0);
+  beginNavProgress();
+
+  /* Re-fit map with padding for bottom sheet */
+  setTimeout(()=>{
+    if(routeLayer) leafletMap.fitBounds(routeLayer.getBounds(),{paddingBottomLeft:[20,200],paddingTopRight:[20,80]});
+    leafletMap.invalidateSize();
+  },100);
+}
+
+/* ══════ STEP DISPLAY ══════ */
+const MANEUVER_ICONS={
+  "turn left":`<path d="M20 9H7.83l3.58-3.59L10 4l-6 6 6 6 1.41-1.41L7.83 11H20V9z"/>`,
+  "turn right":`<path d="M4 9h12.17l-3.58-3.59L14 4l6 6-6 6-1.41-1.41L16.17 11H4V9z"/>`,
+  "turn slight left":`<path d="M20 9H7.83l3.58-3.59L10 4l-6 6 6 6 1.41-1.41L7.83 11H20V9z"/>`,
+  "turn slight right":`<path d="M4 9h12.17l-3.58-3.59L14 4l6 6-6 6-1.41-1.41L16.17 11H4V9z"/>`,
+  "straight":`<path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>`,
+  "arrive":`<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>`,
+  "depart":`<path d="M21 3L3 10.53v.98l6.84 2.65L12.48 21h.98L21 3z"/>`,
+  "roundabout":`<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>`,
+};
+
+function stepIcon(maneuver){
+  const t=(maneuver?.type||"straight").toLowerCase();
+  const m=(maneuver?.modifier||"").toLowerCase();
+  const key=m?`${t} ${m}`:t;
+  return MANEUVER_ICONS[key]||MANEUVER_ICONS[t]||MANEUVER_ICONS["straight"];
+}
+
+function showStep(idx){
+  if(!routeSteps.length){
+    document.getElementById("step-name").textContent=journeyData?._dest||DEST;
+    return;
+  }
+  const step=routeSteps[Math.min(idx,routeSteps.length-1)];
+  const man=step.maneuver||{};
+  document.getElementById("step-svg").innerHTML=stepIcon(man);
+  document.getElementById("step-name").textContent=step.name||"Continue ahead";
+  document.getElementById("step-sub").textContent=(man.type||"").replace(/-/g," ")+(man.modifier?" "+man.modifier:"");
+  const dm=Math.round(step.distance||0);
+  document.getElementById("step-dist").textContent=dm>0?dm:"—";
+}
+
+/* ══════ NAV SIMULATION ══════ */
+function beginNavProgress(){
+  if(navIv)clearInterval(navIv);
+  navProg=0;curStepIdx=0;
+  const totalMin=journeyData?.duration_min||15;
+
+  navIv=setInterval(()=>{
+    navProg=Math.min(navProg+0.4,100);
+    document.getElementById("prog-fill").style.width=navProg+"%";
+    document.getElementById("nav-pct").textContent=Math.round(navProg)+"%";
+    const rem=Math.max(0,Math.round(totalMin*(1-navProg/100)));
+    document.getElementById("nav-eta").textContent=rem===0?"✓":rem;
+
+    /* Advance step */
+    if(routeSteps.length){
+      const si=Math.floor((navProg/100)*routeSteps.length);
+      if(si!==curStepIdx&&si<routeSteps.length){curStepIdx=si;showStep(si);}
+    }
+
+    /* Move user dot */
+    if(userMarker&&routeCoords.length){
+      const pi=Math.floor((navProg/100)*(routeCoords.length-1));
+      userMarker.setLatLng(routeCoords[pi]);
+      if(Math.round(navProg)%8===0) leafletMap.panTo(routeCoords[pi],{animate:true,duration:.8});
+    }
+
+    if(navProg>=100){clearInterval(navIv);showArrived();}
+  },320);
+}
+
+function showArrived(){
+  document.getElementById("nav-sheet").style.display="none";
+  const ov=document.getElementById("arrived-ov");
+  ov.style.display="flex";
+  document.getElementById("arr-txt").textContent=
+    `You walked ${journeyData?.distance_km||"—"} km with a Lungs Score of ${journeyData?.lungs_score||"—"}/100.\nSaved ${journeyData?.co2_saved_g||"—"}g of CO₂ compared to driving!`;
+}
+
+function closeNav(){
+  if(navIv){clearInterval(navIv);navIv=null;}
+  document.getElementById("arrived-ov").style.display="none";
+  document.getElementById("nav-sheet").style.display="none";
+  history.back();
+}
+
+function handleBack(){
+  if(!summaryShowing){
+    document.getElementById("nav-sheet").style.display="none";
+    document.getElementById("route-summary").style.display="block";
+    summaryShowing=true;
+    if(navIv){clearInterval(navIv);navIv=null;}
+  }else{
+    history.back();
+  }
+}
+
+/* ══════ SHEET DRAG (expand/collapse) ══════ */
+let dragStart=null;
+const COLLAPSED=0, PEEK=0, EXPANDED=-(window.innerHeight*.38);
+
+document.getElementById("sheet-drag").addEventListener("touchstart",e=>{dragStart=e.touches[0].clientY;},{passive:true});
+document.getElementById("sheet-drag").addEventListener("touchend",e=>{
+  if(dragStart===null)return;
+  const dy=dragStart-e.changedTouches[0].clientY;
+  const panel=document.getElementById("expanded-panel");
+  if(dy>40){panel.classList.add("visible");}
+  else if(dy<-30){panel.classList.remove("visible");}
+  dragStart=null;
+},{passive:true});
+
+// Also click to toggle
+document.getElementById("sheet-drag").addEventListener("click",()=>{
+  const panel=document.getElementById("expanded-panel");
+  panel.classList.toggle("visible");
+});
+</script>
+</body>
+</html>

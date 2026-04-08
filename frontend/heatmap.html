@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <title>GreenPulse — City Heatmap</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    html,body{overflow:hidden;height:100dvh;background:#07090a;}
+
+    /* Full-screen map base */
+    #map{position:fixed;inset:0;z-index:0;}
+
+    /* Floating top bar over map */
+    .map-topbar{
+      position:fixed;top:0;left:0;right:0;z-index:200;
+      padding:.75rem 1rem .5rem;
+      background:linear-gradient(to bottom,rgba(7,10,9,.95) 55%,transparent);
+    }
+    .map-topbar-inner{
+      display:flex;align-items:center;justify-content:space-between;gap:.75rem;
+      padding:.625rem .875rem;
+      background:rgba(10,13,11,.82);
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+      border-radius:1.25rem;
+      border:1px solid rgba(63,255,139,.14);
+    }
+
+    /* Floating bottom sheet */
+    #bottom-sheet{
+      position:fixed;bottom:0;left:0;right:0;z-index:200;
+      background:rgba(10,13,11,.97);
+      border-radius:1.5rem 1.5rem 0 0;
+      border-top:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+      transform:translateY(0);
+      transition:transform .38s cubic-bezier(.32,.72,0,1);
+    }
+    .sheet-handle{width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);margin:.75rem auto .25rem;cursor:grab;}
+
+    /* Legend pills */
+    .legend-pill{
+      display:flex;align-items:center;gap:.375rem;
+      padding:.3rem .625rem;border-radius:999px;
+      font-size:.68rem;font-weight:700;
+      cursor:pointer;transition:all .2s;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    .legend-pill.active{border-color:currentColor;background:rgba(255,255,255,.06);}
+    .legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+
+    /* Stats strip */
+    .stats-strip{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid rgba(255,255,255,.06);}
+    .strip-cell{display:flex;flex-direction:column;align-items:center;padding:.75rem .5rem;gap:.1rem;}
+    .strip-cell:not(:last-child){border-right:1px solid rgba(255,255,255,.06);}
+    .strip-big{font-size:1.375rem;font-weight:900;line-height:1;}
+    .strip-tiny{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--on-sv);}
+
+    /* Zone card popup (custom) */
+    .zone-popup{font-family:'Inter',sans-serif;min-width:160px;}
+    .zone-popup .zp-head{font-size:.85rem;font-weight:800;margin-bottom:.35rem;}
+    .zone-popup .zp-aqi{font-size:1.5rem;font-weight:900;line-height:1;margin-bottom:.2rem;}
+    .zone-popup .zp-row{display:flex;align-items:center;gap:.375rem;font-size:.72rem;color:#888;margin-top:.2rem;}
+
+    /* Pulse animation for user dot */
+    @keyframes pulse-user{0%{r:14;opacity:.5}50%{r:22;opacity:.15}100%{r:14;opacity:.5}}
+
+    /* Leaflet map dark theme tweaks */
+    .leaflet-container{background:#07090a;}
+    .gp-popup .leaflet-popup-content-wrapper{
+      background:rgba(12,15,13,.97)!important;
+      border:1px solid rgba(63,255,139,.2);
+      border-radius:1.125rem!important;
+      color:#fff;font-family:'Inter',sans-serif;
+      box-shadow:0 12px 40px rgba(0,0,0,.65)!important;
+      padding:0!important;
+    }
+    .gp-popup .leaflet-popup-content{margin:0!important;padding:1rem!important;}
+    .gp-popup .leaflet-popup-tip-container{display:none;}
+    .gp-popup .leaflet-popup-close-button{color:#ababac!important;top:.5rem!important;right:.625rem!important;font-size:1rem!important;}
+    .leaflet-control-zoom a{
+      background:rgba(12,15,13,.92)!important;color:#fff!important;
+      border-color:rgba(255,255,255,.1)!important;backdrop-filter:blur(12px);
+    }
+    .leaflet-control-zoom a:hover{background:rgba(20,24,22,.95)!important;}
+    .leaflet-control-attribution{
+      background:rgba(7,9,10,.75)!important;color:#474849!important;font-size:.55rem!important;
+    }
+    .leaflet-control-attribution a{color:#3fff8b!important;}
+
+    /* Layer filter toggle */
+    #layer-toggle{
+      position:fixed;right:1rem;top:5rem;z-index:300;
+      display:flex;flex-direction:column;gap:.5rem;
+    }
+    .layer-btn{
+      width:2.25rem;height:2.25rem;border-radius:.75rem;
+      background:rgba(10,13,11,.88);border:1px solid rgba(255,255,255,.1);
+      color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+      backdrop-filter:blur(12px);transition:all .2s;font-size:.65rem;font-weight:700;
+    }
+    .layer-btn.active{background:rgba(63,255,139,.18);border-color:rgba(63,255,139,.4);color:#3fff8b;}
+    .layer-btn:hover{border-color:rgba(255,255,255,.25);}
+
+    /* Expanded clean list */
+    #clean-section{padding:.5rem 1rem .5rem;}
+    .clean-row{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04);
+    }
+    .clean-row:last-child{border-bottom:none;}
+  </style>
+</head>
+<body>
+
+<!-- REAL MAP BACKGROUND -->
+<div id="map"></div>
+
+<!-- FLOATING TOP BAR -->
+<div class="map-topbar">
+  <div class="map-topbar-inner">
+    <div style="display:flex;align-items:center;gap:.625rem;">
+      <a href="dashboard.html" style="width:2rem;height:2rem;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;text-decoration:none;color:#fff;flex-shrink:0;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </a>
+      <div>
+        <div style="font-size:.9375rem;font-weight:800;color:#3fff8b;text-shadow:0 0 10px rgba(63,255,139,.4);line-height:1.1;" id="city-title">City Heatmap</div>
+        <div style="font-size:.65rem;color:#ababac;margin-top:.1rem;" id="map-subtitle">Loading live AQI zones…</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.5rem;">
+      <div style="width:7px;height:7px;border-radius:50%;background:#3fff8b;box-shadow:0 0 6px #3fff8b;animation:pulse-dot 2s infinite;"></div>
+      <span id="updated-time" style="font-size:.68rem;font-weight:600;color:#ababac;">Live</span>
+    </div>
+  </div>
+</div>
+
+<!-- LAYER CONTROLS (right side) -->
+<div id="layer-toggle">
+  <div class="layer-btn active" id="btn-circles" onclick="toggleLayer('circles')" title="AQI Zones">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="12" r="8" opacity=".4"/><circle cx="12" cy="12" r="4"/></svg>
+  </div>
+  <div class="layer-btn" id="btn-markers" onclick="toggleLayer('markers')" title="Zone Markers">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+  </div>
+  <div class="layer-btn" id="btn-hotspots" onclick="toggleLayer('hotspots')" title="Hot Spots Only">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M13.5 .67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/></svg>
+  </div>
+</div>
+
+<!-- BOTTOM SHEET -->
+<div id="bottom-sheet">
+  <div class="sheet-handle" id="sheet-drag" onclick="toggleSheet()"></div>
+
+  <!-- Legend row -->
+  <div style="padding:.25rem 1rem .625rem;display:flex;align-items:center;gap:.5rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+    <div class="legend-pill active" style="color:#3fff8b;" onclick="filterByAqi(0,50,this)">
+      <div class="legend-dot" style="background:#3fff8b;box-shadow:0 0 5px #3fff8b;"></div>Good (0–50)
+    </div>
+    <div class="legend-pill" style="color:#ffbd5c;" onclick="filterByAqi(51,100,this)">
+      <div class="legend-dot" style="background:#ffbd5c;"></div>Moderate
+    </div>
+    <div class="legend-pill" style="color:#ff7350;" onclick="filterByAqi(101,150,this)">
+      <div class="legend-dot" style="background:#ff7350;"></div>Unhealthy
+    </div>
+    <div class="legend-pill" style="color:#ff716c;" onclick="filterByAqi(151,300,this)">
+      <div class="legend-dot" style="background:#ff716c;"></div>Hazardous
+    </div>
+    <div class="legend-pill" style="color:#ababac;" onclick="filterByAqi(0,300,this)">All</div>
+  </div>
+
+  <!-- Stats strip -->
+  <div class="stats-strip">
+    <div class="strip-cell">
+      <div class="strip-tiny">Reports</div>
+      <div class="strip-big" id="sc-rep">—</div>
+    </div>
+    <div class="strip-cell">
+      <div class="strip-tiny">Clean Zones</div>
+      <div class="strip-big" id="sc-cln" style="color:#3fff8b;">—</div>
+    </div>
+    <div class="strip-cell">
+      <div class="strip-tiny">Hot Spots</div>
+      <div class="strip-big" id="sc-hot" style="color:#ff7350;">—</div>
+    </div>
+  </div>
+
+  <!-- Expandable clean corridors list -->
+  <div id="clean-section" style="display:none;">
+    <div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#3fff8b;margin-bottom:.5rem;display:flex;align-items:center;gap:.375rem;">
+      <svg viewBox="0 0 24 24" width="11" height="11" fill="#3fff8b"><path d="M17 8C8 10 5.9 16.17 3.82 21L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20c4 0 4-2 8-2s4 2 8 2V4c-1 0-3 .75-7 4z"/></svg>
+      Cleanest Zones Right Now
+    </div>
+    <div id="clean-list"></div>
+  </div>
+
+  <!-- bottom nav spacing -->
+  <nav id="bottom-nav" style="position:relative;border-top:none;padding-top:0;"></nav>
+</div>
+
+<style>
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="assets/app.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   GreenPulse Heatmap — Real Leaflet map + AQI zones
+═══════════════════════════════════════════════════ */
+buildBottomNav("heatmap");
+
+let leafletMap, circleLayer, markerLayer, hotLayer, userCircle;
+let allZones=[], sheetOpen=false;
+
+// Layer visibility state
+const layerState={circles:true, markers:false, hotspots:false};
+
+/* ── AQI helpers ── */
+function aqiHex(a){return a<=50?"#3fff8b":a<=100?"#ffbd5c":a<=150?"#ff7350":"#ff716c";}
+function aqiLabel(a){return a<=50?"Good":a<=100?"Moderate":a<=150?"Unhealthy":"Hazardous";}
+function aqiOpacity(a){
+  // More polluted = more opaque/vivid
+  if(a<=50) return{fill:.28,stroke:.6};
+  if(a<=100)return{fill:.35,stroke:.7};
+  if(a<=150)return{fill:.45,stroke:.8};
+  return      {fill:.55,stroke:.9};
+}
+
+/* ── Init Leaflet map ── */
+function initMap(lat,lon){
+  leafletMap=L.map("map",{
+    center:[lat,lon],zoom:13,
+    zoomControl:false,attributionControl:false,
+  });
+
+  // Dark CartoDB tiles (best contrast for overlays)
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{
+    subdomains:"abcd",maxZoom:20,
+    attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> © <a href="https://carto.com">CARTO</a>'
+  }).addTo(leafletMap);
+
+  L.control.zoom({position:"bottomright"}).addTo(leafletMap);
+  L.control.attribution({position:"bottomleft",prefix:""}).addTo(leafletMap);
+
+  return leafletMap;
+}
+
+/* ── Draw AQI circle zones ── */
+function drawCircles(zones){
+  if(circleLayer) leafletMap.removeLayer(circleLayer);
+  circleLayer=L.layerGroup();
+
+  zones.forEach(z=>{
+    const col=aqiHex(z.aqi);
+    const op=aqiOpacity(z.aqi);
+    const radius=z.radius_m||400;
+
+    // Outer glow ring
+    L.circle([z.lat,z.lon],{
+      radius:radius*1.4,
+      color:col,weight:0,
+      fillColor:col,fillOpacity:op.fill*0.35,
+      interactive:false,
+    }).addTo(circleLayer);
+
+    // Main zone circle
+    const circle=L.circle([z.lat,z.lon],{
+      radius:radius,
+      color:col,weight:1.5,opacity:op.stroke,
+      fillColor:col,fillOpacity:op.fill,
+      className:"aqi-circle",
+    });
+
+    // Rich popup
+    circle.bindPopup(`
+      <div class="zone-popup">
+        <div class="zp-aqi" style="color:${col};">${z.aqi}</div>
+        <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:${col}88;margin-bottom:.5rem;">${aqiLabel(z.aqi)}</div>
+        <div class="zp-row"><svg viewBox="0 0 24 24" width="12" height="12" fill="#ababac"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg> ${z.lat.toFixed(4)}°N, ${z.lon.toFixed(4)}°E</div>
+        <div class="zp-row"><svg viewBox="0 0 24 24" width="12" height="12" fill="#ababac"><path d="M12 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg> Radius: ${radius}m</div>
+        <div class="zp-row"><svg viewBox="0 0 24 24" width="12" height="12" fill="#ababac"><path d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm-8 8c0-1.54.78-2.9 2-3.69V17h4v-2H8v-1h2v-2H8v-1h2v-2H6.79C5.34 9.28 4 10.52 4 12zm12 0v1h-2v2h2v1h-2v2h4V8.31A4.71 4.71 0 0 1 20 12z"/></svg> Temp: ${z.temp}°C</div>
+      </div>`,
+      {className:"gp-popup",maxWidth:200}
+    );
+
+    circle.addTo(circleLayer);
+  });
+
+  if(layerState.circles) circleLayer.addTo(leafletMap);
+}
+
+/* ── Draw pin markers ── */
+function drawMarkers(zones){
+  if(markerLayer) leafletMap.removeLayer(markerLayer);
+  markerLayer=L.layerGroup();
+
+  // Only show markers for high-AQI zones (>60) to avoid clutter
+  zones.filter(z=>z.aqi>60).forEach(z=>{
+    const col=aqiHex(z.aqi);
+    const icon=L.divIcon({
+      className:"",iconSize:[36,36],iconAnchor:[18,18],
+      html:`<div style="width:36px;height:36px;border-radius:50%;background:${col};border:2px solid #fff;box-shadow:0 0 16px ${col}88,0 2px 8px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#0d0e0f;font-family:Inter,sans-serif;">${z.aqi}</div>`
+    });
+    L.marker([z.lat,z.lon],{icon,zIndexOffset:10})
+      .bindPopup(`<div class="zone-popup"><div class="zp-aqi" style="color:${col};">${z.aqi}</div><div style="font-size:.7rem;color:${col}88;font-weight:700;">${aqiLabel(z.aqi)}</div><div class="zp-row">🌡 ${z.temp}°C</div></div>`,{className:"gp-popup",maxWidth:160})
+      .addTo(markerLayer);
+  });
+
+  if(layerState.markers) markerLayer.addTo(leafletMap);
+}
+
+/* ── Draw hotspot markers ── */
+function drawHotspots(hotZones){
+  if(hotLayer) leafletMap.removeLayer(hotLayer);
+  hotLayer=L.layerGroup();
+
+  hotZones.forEach((z,i)=>{
+    const col=aqiHex(z.aqi);
+    // Pulsing ring for hotspots
+    L.circle([z.lat,z.lon],{
+      radius:z.radius_m*0.3,
+      color:col,weight:3,opacity:.9,
+      fillColor:col,fillOpacity:.12,
+      dashArray:"6,4",
+    }).addTo(hotLayer);
+
+    const icon=L.divIcon({
+      className:"",iconSize:[42,52],iconAnchor:[21,52],
+      html:`<div style="display:flex;flex-direction:column;align-items:center;">
+        <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,${col},${col}cc);border:2.5px solid #fff;box-shadow:0 0 24px ${col}99,0 4px 12px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#0d0e0f;font-family:Inter,sans-serif;">
+          🔥${z.aqi}
+        </div>
+        <div style="width:2px;height:10px;background:${col};box-shadow:0 0 6px ${col};"></div>
+      </div>`
+    });
+    L.marker([z.lat,z.lon],{icon,zIndexOffset:100})
+      .bindPopup(`<div class="zone-popup"><div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:${col};margin-bottom:.3rem;">🔥 Hotspot #${i+1}</div><div class="zp-aqi" style="color:${col};">${z.aqi}</div><div style="font-size:.7rem;color:${col}88;font-weight:700;">${aqiLabel(z.aqi)}</div><div class="zp-row">🌡 ${z.temp}°C</div></div>`,{className:"gp-popup",maxWidth:160})
+      .addTo(hotLayer);
+  });
+
+  if(layerState.hotspots) hotLayer.addTo(leafletMap);
+}
+
+/* ── User location dot ── */
+function addUserDot(lat,lon){
+  if(userCircle) leafletMap.removeLayer(userCircle);
+  // Outer pulse ring
+  L.circle([lat,lon],{radius:80,color:"#3fff8b",weight:0,fillColor:"#3fff8b",fillOpacity:.15,interactive:false}).addTo(leafletMap);
+  // Inner solid dot
+  L.circleMarker([lat,lon],{
+    radius:10,color:"#fff",weight:2.5,
+    fillColor:"#3fff8b",fillOpacity:1,
+    zIndexOffset:1000,
+  }).addTo(leafletMap).bindPopup('<b>You are here</b>',{className:"gp-popup"});
+}
+
+/* ── Layer toggle ── */
+function toggleLayer(name){
+  layerState[name]=!layerState[name];
+  document.getElementById("btn-"+name).classList.toggle("active",layerState[name]);
+
+  const layers={circles:circleLayer,markers:markerLayer,hotspots:hotLayer};
+  const lyr=layers[name];
+  if(!lyr)return;
+  if(layerState[name])lyr.addTo(leafletMap);
+  else leafletMap.removeLayer(lyr);
+}
+
+/* ── Filter by AQI range ── */
+let activeFilter=[0,300];
+function filterByAqi(min,max,el){
+  activeFilter=[min,max];
+  document.querySelectorAll(".legend-pill").forEach(p=>p.classList.remove("active"));
+  el.classList.add("active");
+
+  const filtered=allZones.filter(z=>z.aqi>=min&&z.aqi<=max);
+  drawCircles(filtered);
+  drawMarkers(filtered);
+}
+
+/* ── Sheet toggle ── */
+function toggleSheet(){
+  sheetOpen=!sheetOpen;
+  const cs=document.getElementById("clean-section");
+  cs.style.display=sheetOpen?"block":"none";
+}
+
+/* ═══ MAIN ═══ */
+(async()=>{
+  try{
+    const d=await API.heatmap();
+    allZones=d.zones;
+
+    // Init map at city center
+    const {lat,lon}=d.center;
+    initMap(lat,lon);
+
+    // User dot
+    addUserDot(lat,lon);
+
+    // Draw all layers
+    drawCircles(d.zones);
+    drawMarkers(d.zones);
+    drawHotspots(d.hot_spots);
+
+    // Fit map to show all zones
+    const lats=d.zones.map(z=>z.lat),lons=d.zones.map(z=>z.lon);
+    leafletMap.fitBounds([
+      [Math.min(...lats)-0.01,Math.min(...lons)-0.01],
+      [Math.max(...lats)+0.01,Math.max(...lons)+0.01]
+    ],{padding:[60,40]});
+
+    // Update top bar
+    const city=d.city||"Bengaluru";
+    document.getElementById("city-title").textContent=`${city} AQI Map`;
+    const t=new Date(d.last_updated);
+    document.getElementById("updated-time").textContent=`${t.getHours()}:${String(t.getMinutes()).padStart(2,"0")}`;
+    document.getElementById("map-subtitle").textContent=
+      `${d.zones.length} zones · AQI ${d.environment.aqi} overall · ${d.environment.temp}°C`;
+
+    // Stats
+    document.getElementById("sc-rep").textContent=d.community_reports;
+    document.getElementById("sc-cln").textContent=d.clean_spots.length;
+    document.getElementById("sc-hot").textContent=d.hot_spots.length;
+
+    // Clean list
+    document.getElementById("clean-list").innerHTML=d.clean_spots.slice(0,5).map(z=>`
+      <div class="clean-row">
+        <div style="display:flex;align-items:center;gap:.625rem;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${aqiHex(z.aqi)};box-shadow:0 0 5px ${aqiHex(z.aqi)};flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:.8rem;font-weight:600;">${z.lat.toFixed(3)}°N, ${z.lon.toFixed(3)}°E</div>
+            <div style="font-size:.68rem;color:#ababac;margin-top:.05rem;">🌡 ${z.temp}°C · ${z.radius_m}m radius</div>
+          </div>
+        </div>
+        <span class="badge" style="color:${aqiHex(z.aqi)};border-color:${aqiHex(z.aqi)}44;background:${aqiHex(z.aqi)}15;font-size:.6rem;">AQI ${z.aqi}</span>
+      </div>`).join("");
+
+  }catch(e){
+    document.getElementById("map-subtitle").textContent="Backend offline — run uvicorn main:app";
+    // Still show map with default center
+    initMap(12.9716,77.5946);
+    addUserDot(12.9716,77.5946);
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>

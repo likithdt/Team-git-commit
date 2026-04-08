@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>GreenPulse — Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    body{display:flex;align-items:stretch;justify-content:center;min-height:100dvh;background:var(--surface);}
+    .phone-frame{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem 1.25rem;overflow-y:auto;}
+    .orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;}
+    .orb1{width:350px;height:350px;background:#3fff8b;opacity:.07;top:-100px;left:-80px;animation:drift 10s ease-in-out infinite alternate;}
+    .orb2{width:280px;height:280px;background:#13ea79;opacity:.08;bottom:-60px;right:-60px;animation:drift 13s ease-in-out infinite alternate-reverse;}
+    @keyframes drift{0%{transform:translate(0,0);}100%{transform:translate(20px,15px) scale(1.05);}}
+    .card{width:100%;max-width:360px;background:rgba(18,19,21,.78);backdrop-filter:blur(28px);border-radius:1.75rem;border:1px solid rgba(255,255,255,.07);padding:1.75rem 1.5rem;box-shadow:0 24px 64px rgba(0,0,0,.45);}
+    .tab-bar{display:flex;gap:.375rem;background:rgba(0,0,0,.28);border-radius:999px;padding:.28rem;margin-bottom:1.5rem;}
+    .tab-btn{flex:1;padding:.45rem;border-radius:999px;font-size:.8125rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;background:transparent;color:#ababac;font-family:'Inter',sans-serif;}
+    .tab-btn.active{background:rgba(63,255,139,.15);color:#3fff8b;border:1px solid rgba(63,255,139,.28);}
+    .field-group{display:flex;flex-direction:column;gap:.875rem;margin-bottom:1rem;}
+    .pw-wrap{position:relative;}
+    .eye-btn{position:absolute;right:.875rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#5a5b5c;padding:0;display:flex;transition:color .2s;}
+    .eye-btn:hover{color:#3fff8b;}
+    .divider{display:flex;align-items:center;gap:.875rem;color:#474849;font-size:.7rem;font-weight:600;letter-spacing:.08em;margin:1.125rem 0;}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06);}
+    .social-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.75rem;padding:.875rem;border-radius:1rem;background:rgba(28,30,31,.7);border:1px solid rgba(255,255,255,.09);color:#fff;font-family:'Inter',sans-serif;font-size:.875rem;font-weight:600;cursor:pointer;transition:all .2s;}
+    .social-btn:hover{background:rgba(36,38,39,.95);border-color:rgba(255,255,255,.16);}
+    .social-btn:active{transform:scale(.97);}
+    .err-banner{display:none;align-items:center;gap:.5rem;padding:.625rem .875rem;border-radius:.875rem;font-size:.8125rem;margin-bottom:.875rem;border:1px solid;}
+    .err-banner.err{background:rgba(255,113,80,.1);border-color:rgba(255,113,80,.28);color:#ff7350;}
+    .err-banner.ok{background:rgba(63,255,139,.1);border-color:rgba(63,255,139,.28);color:#3fff8b;}
+    .remember-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem;}
+    .remember-row label{display:flex;align-items:center;gap:.5rem;font-size:.8125rem;color:#ababac;cursor:pointer;}
+    .remember-row input[type=checkbox]{width:15px;height:15px;accent-color:#3fff8b;cursor:pointer;}
+    .link-btn{background:none;border:none;color:#3fff8b;font-size:.8125rem;font-family:'Inter',sans-serif;cursor:pointer;opacity:.75;}
+    .link-btn:hover{opacity:1;}
+    .footer-txt{text-align:center;color:#474849;font-size:.75rem;margin-top:1.25rem;max-width:320px;}
+    .footer-txt a{color:#3fff8b;opacity:.7;text-decoration:none;}
+  </style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div>
+  <!-- Logo -->
+  <div style="text-align:center;margin-bottom:1.75rem;">
+    <div style="width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,rgba(63,255,139,.22),rgba(63,255,139,.04));border:1.5px solid rgba(63,255,139,.38);display:flex;align-items:center;justify-content:center;margin:0 auto .875rem;box-shadow:0 0 28px rgba(63,255,139,.22);">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="#3fff8b"><path d="M17 8C8 10 5.9 16.17 3.82 21L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20c4 0 4-2 8-2s4 2 8 2V4c-1 0-3 .75-7 4z"/></svg>
+    </div>
+    <div style="font-size:1.75rem;font-weight:900;color:#3fff8b;letter-spacing:-.03em;text-shadow:0 0 20px rgba(63,255,139,.38);">GreenPulse</div>
+    <div style="color:#5a5b5c;font-size:.8125rem;margin-top:.2rem;">AI-Powered Healthy Commute</div>
+  </div>
+
+  <div class="card">
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-in"  onclick="switchTab('in')">Sign In</button>
+      <button class="tab-btn"        id="tab-up"  onclick="switchTab('up')">Create Account</button>
+    </div>
+
+    <!-- Error / success banner -->
+    <div class="err-banner" id="banner">
+      <svg id="banner-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="flex-shrink:0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      <span id="banner-msg"></span>
+    </div>
+
+    <!-- Form -->
+    <form id="auth-form" onsubmit="handleSubmit(event)">
+      <div class="field-group">
+        <!-- Name (register only) -->
+        <div class="field-wrap" id="name-wrap" style="display:none">
+          <div class="field-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="#5a5b5c"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+          </div>
+          <input id="f-name" class="gp-input" type="text" placeholder="Full name" autocomplete="name"/>
+        </div>
+
+        <!-- Email -->
+        <div class="field-wrap">
+          <div class="field-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="#5a5b5c"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          </div>
+          <input id="f-email" class="gp-input" type="email" placeholder="Email address" autocomplete="email"/>
+        </div>
+
+        <!-- Password -->
+        <div class="field-wrap pw-wrap">
+          <div class="field-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="#5a5b5c"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+          </div>
+          <input id="f-pwd" class="gp-input" type="password" placeholder="Password" autocomplete="current-password" style="padding-right:3rem"/>
+          <button type="button" class="eye-btn" onclick="togglePwd('f-pwd','eye1')">
+            <svg id="eye1" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          </button>
+        </div>
+
+        <!-- Confirm password (register only) -->
+        <div class="field-wrap pw-wrap" id="confirm-wrap" style="display:none">
+          <div class="field-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="#5a5b5c"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          </div>
+          <input id="f-confirm" class="gp-input" type="password" placeholder="Confirm password" autocomplete="new-password" style="padding-right:3rem"/>
+          <button type="button" class="eye-btn" onclick="togglePwd('f-confirm','eye2')">
+            <svg id="eye2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          </button>
+        </div>
+      </div><!-- /field-group -->
+
+      <!-- Remember + Forgot (sign in only) -->
+      <div class="remember-row" id="remember-row">
+        <label><input type="checkbox" id="remember"/> Remember me</label>
+        <button type="button" class="link-btn" onclick="forgotPwd()">Forgot password?</button>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submit-btn" style="margin-top:.875rem;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" id="submit-icon"><path d="M10 17l5-5-5-5v10z"/></svg>
+        <span id="submit-label">Sign In</span>
+      </button>
+    </form>
+
+    <div class="divider">or continue with</div>
+
+    <button class="social-btn" onclick="socialLogin('google')">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+
+    <p style="text-align:center;color:#5a5b5c;font-size:.8125rem;margin-top:1.125rem;" id="switch-prompt">
+      No account? <button type="button" class="link-btn" style="font-size:.8125rem;" onclick="switchTab('up')">Create one →</button>
+    </p>
+  </div>
+
+  <p class="footer-txt">By continuing you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a></p>
+  <p style="text-align:center;color:#2a2b2c;font-size:.7rem;margin-top:.75rem;">Demo: demo@greenpulse.ai / demo123</p>
+</div>
+
+<script>
+let currentTab = 'in';
+const USERS_KEY = 'gp_users';
+const SESSION_KEY = 'gp_user';
+
+// Auto-redirect if already logged in
+if(localStorage.getItem(SESSION_KEY)) location.href='dashboard.html';
+
+function getUsers(){return JSON.parse(localStorage.getItem(USERS_KEY)||'[]');}
+function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u));}
+function findUser(email){return getUsers().find(u=>u.email.toLowerCase()===email.toLowerCase());}
+
+function switchTab(tab){
+  currentTab=tab;
+  ['in','up'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+  });
+  const isReg = tab==='up';
+  document.getElementById('name-wrap').style.display    = isReg?'block':'none';
+  document.getElementById('confirm-wrap').style.display = isReg?'block':'none';
+  document.getElementById('remember-row').style.display = isReg?'none':'flex';
+  document.getElementById('submit-label').textContent   = isReg?'Create Account':'Sign In';
+  document.getElementById('switch-prompt').innerHTML    = isReg
+    ? 'Have an account? <button type="button" class="link-btn" style="font-size:.8125rem" onclick="switchTab(\'in\')">Sign in →</button>'
+    : 'No account? <button type="button" class="link-btn" style="font-size:.8125rem" onclick="switchTab(\'up\')">Create one →</button>';
+  hideBanner();
+  if(isReg) document.getElementById('f-pwd').setAttribute('autocomplete','new-password');
+  else document.getElementById('f-pwd').setAttribute('autocomplete','current-password');
+}
+
+function showErr(msg){
+  const b=document.getElementById('banner');
+  b.className='err-banner err'; b.style.display='flex';
+  document.getElementById('banner-msg').textContent=msg;
+  b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+}
+function showOk(msg){
+  const b=document.getElementById('banner');
+  b.className='err-banner ok'; b.style.display='flex';
+  document.getElementById('banner-msg').textContent=msg;
+}
+function hideBanner(){document.getElementById('banner').style.display='none';}
+
+function togglePwd(inputId,iconId){
+  const inp=document.getElementById(inputId);
+  const show=inp.type==='password';
+  inp.type=show?'text':'password';
+  document.getElementById(iconId).innerHTML=show
+    ?'<path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>'
+    :'<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
+}
+
+function setLoading(on){
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=on;
+  if(on) btn.innerHTML='<div style="width:18px;height:18px;border:2px solid var(--on-pri);border-top-color:transparent;border-radius:50%;" class="spin"></div> Please wait…';
+  else btn.innerHTML=`<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10 17l5-5-5-5v10z"/></svg> <span id="submit-label">${currentTab==='up'?'Create Account':'Sign In'}</span>`;
+}
+
+function handleSubmit(e){
+  e.preventDefault(); hideBanner();
+  const email  = document.getElementById('f-email').value.trim();
+  const pwd    = document.getElementById('f-pwd').value;
+
+  if(!email||!email.includes('@')){showErr('Enter a valid email address.');return;}
+  if(pwd.length<6){showErr('Password must be at least 6 characters.');return;}
+
+  if(currentTab==='up'){
+    // REGISTER
+    const name    = document.getElementById('f-name').value.trim();
+    const confirm = document.getElementById('f-confirm').value;
+    if(!name){showErr('Please enter your full name.');return;}
+    if(pwd!==confirm){showErr('Passwords do not match.');return;}
+    if(findUser(email)){showErr('An account with this email already exists. Sign in instead.');return;}
+
+    setLoading(true);
+    setTimeout(()=>{
+      const users=getUsers();
+      const user={name,email,pwd,city:'Bengaluru',joined:new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'}),avatarData:null};
+      users.push(user);
+      saveUsers(users);
+      const session={name,email,city:'Bengaluru',joined:user.joined,avatarData:null};
+      localStorage.setItem(SESSION_KEY,JSON.stringify(session));
+      showOk('Account created! Redirecting…');
+      setTimeout(()=>location.href='dashboard.html',800);
+    },600);
+
+  } else {
+    // SIGN IN — check demo or stored account
+    setLoading(true);
+    setTimeout(()=>{
+      // Demo account
+      if(email.toLowerCase()==='demo@greenpulse.ai'&&pwd==='demo123'){
+        localStorage.setItem(SESSION_KEY,JSON.stringify({name:'Demo User',email,city:'Bengaluru',joined:'April 2026',avatarData:null}));
+        location.href='dashboard.html'; return;
+      }
+      // Check stored accounts
+      const user=findUser(email);
+      if(!user||user.pwd!==pwd){setLoading(false);showErr('Incorrect email or password.');return;}
+
+      const session={name:user.name,email:user.email,city:user.city,joined:user.joined,avatarData:user.avatarData||null};
+      localStorage.setItem(SESSION_KEY,JSON.stringify(session));
+      if(document.getElementById('remember').checked){
+        localStorage.setItem('gp_remember',email);
+      }
+      showOk('Welcome back! Loading…');
+      setTimeout(()=>location.href='dashboard.html',600);
+    },500);
+  }
+}
+
+function socialLogin(provider){
+  const btn=event.currentTarget;
+  btn.disabled=true;btn.innerHTML='<div style="width:18px;height:18px;border:2px solid #3fff8b;border-top-color:transparent;border-radius:50%;" class="spin"></div> Connecting…';
+  setTimeout(()=>{
+    const name=provider==='google'?'Google User':'GitHub User';
+    const email=`user@${provider}.com`;
+    // Upsert into users list
+    const users=getUsers();
+    if(!findUser(email)){
+      users.push({name,email,pwd:'',city:'Bengaluru',joined:new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'}),avatarData:null});
+      saveUsers(users);
+    }
+    localStorage.setItem(SESSION_KEY,JSON.stringify({name,email,city:'Bengaluru',joined:new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'}),avatarData:null}));
+    location.href='dashboard.html';
+  },1200);
+}
+
+function forgotPwd(){
+  const email=document.getElementById('f-email').value.trim();
+  if(!email){showErr('Enter your email first, then click Forgot password.');return;}
+  showOk(`Reset instructions sent to ${email} (demo mode)`);
+}
+
+// Pre-fill remembered email
+const rem=localStorage.getItem('gp_remember');
+if(rem) document.getElementById('f-email').value=rem;
+</script>
+</body>
+</html>
