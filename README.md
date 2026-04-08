@@ -1,14 +1,3 @@
-AI-Powered Micro-Climate & Commute Optimizer
-
-shows the AQI, Temp, Wind
-
-we'll be using live data from google maps and show route which is cleaner and faster
-
-Shows to wait 5 min to take the best route
-
-shows AI Insights, City HeatMap
-
-
 # GreenPulse
 ### AI-Powered Micro-Climate & Commute Optimizer
 **Developed for INNOVATEX 4.0: BuildWithAI 24-Hour Hackathon** *Organized by Presidency University, Bengaluru*
