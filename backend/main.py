@@ -3,10 +3,9 @@ GreenPulse Backend — AI-Powered Micro-Climate & Commute Optimizer
 FastAPI server with Gemini AI integration and real AQI/weather data
 """
 
-import os, json, math, random, time
+import os, json, math, random, time, asyncio, httpx
 from datetime import datetime
 from typing import Optional
-import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -36,6 +35,7 @@ app = FastAPI(title="GreenPulse API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -553,3 +553,29 @@ async def get_daily_briefing(city: str = "Bengaluru"):
     model = genai.GenerativeModel("gemini-1.5-flash")
     resp = model.generate_content(prompt)
     return {"briefing": resp.text.strip()}
+
+@app.get("/api/weather-at")
+async def get_weather_at_coords(lat: float, lon: float):
+    try:
+        # 1. Fetch Temperature from OWM
+        weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={OPENWEATHERMAP_API_KEY}&units=metric"
+        
+        # 2. Fetch AQI from OWM
+        pollution_url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={OPENWEATHERMAP_API_KEY}"
+
+        async with httpx.AsyncClient() as client:
+            w_resp, p_resp = await asyncio.gather(
+                client.get(weather_url),
+                client.get(pollution_url)
+            )
+
+        w_data = w_resp.json()
+        p_data = p_resp.json()
+
+        return {
+            "temp": w_data['main']['temp'],
+            "aqi": p_data['list'][0]['main']['aqi'],
+            "city_guess": w_data.get('name', 'Unknown Area')
+        }
+    except Exception as e:
+        return {"error": str(e)}

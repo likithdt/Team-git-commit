@@ -1,9 +1,9 @@
-/* GreenPulse — Shared utilities v3 (SQLite & Auth Integrated) */
-const API_BASE = "http://localhost:8000";
+/* GreenPulse — Shared utilities v3 (SQLite, Auth & Heatmap Integrated) */
+const API_BASE = "http://127.0.0.1:8000";
 
 const State = { city: "Bengaluru", lat: 12.9716, lon: 77.5946 };
 
-/* ── SVG icon strings (no font dependency) ── */
+/* ── SVG icon strings ── */
 const SVG = {
   home: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>`,
   plan: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="7" cy="6" r="2" fill="currentColor"/><circle cx="17" cy="12" r="2" fill="currentColor"/><circle cx="7" cy="18" r="2" fill="currentColor"/></svg>`,
@@ -15,7 +15,6 @@ const SVG = {
 
 /* ── Database-Driven API Client ── */
 const API = {
-  // New: Signup logic
   async signup(name, email, password) {
     const r = await fetch(`${API_BASE}/api/signup`, {
       method: "POST",
@@ -29,7 +28,6 @@ const API = {
     return r.json();
   },
 
-  // New: Login logic with real DB check
   async login(email, password) {
     const r = await fetch(`${API_BASE}/api/login`, {
       method: "POST",
@@ -38,11 +36,17 @@ const API = {
     });
     if (!r.ok) throw new Error("Invalid email or password");
     const data = await r.json();
-    localStorage.setItem("gp_user", JSON.stringify(data.user)); // Save real user stats
+    localStorage.setItem("gp_user", JSON.stringify(data.user));
     return data;
   },
 
-  // New: Save journey to history and update profile stats
+  // NEW: Heatmap data method
+  async heatmap() {
+    const r = await fetch(`${API_BASE}/api/heatmap`);
+    if (!r.ok) throw new Error("Heatmap data failed to load");
+    return r.json();
+  },
+
   async completeJourney(lungsScore, co2Saved) {
     const user = JSON.parse(localStorage.getItem("gp_user"));
     if (!user) return;
@@ -58,7 +62,6 @@ const API = {
     });
 
     if (r.ok) {
-      // Refresh local stats so Profile page reflects changes immediately
       user.journeys += 1;
       user.co2_saved += co2Saved;
       user.lungs_avg = Math.round((user.lungs_avg + lungsScore) / 2);
@@ -110,12 +113,50 @@ function buildBottomNav(activePage) {
 
 /* ── Authentication Guard ── */
 function requireAuth() {
-  if (!localStorage.getItem("gp_user") && !location.pathname.includes("login.html") && !location.pathname.includes("signup.html")) {
-    location.href = "login.html";
+  const user = localStorage.getItem("gp_user");
+  const path = window.location.pathname;
+  if (!user && !path.includes("login.html") && !path.includes("signup.html")) {
+    window.location.href = "login.html";
   }
 }
 
 function doLogout() {
   localStorage.removeItem("gp_user");
-  location.href = "login.html";
+  window.location.href = "login.html";
+}
+
+/* ── Map Tooltip Initializer ── */
+function setupMapHover(map) {
+  const tooltip = document.getElementById('hover-tooltip');
+  if (!tooltip) return;
+
+  let hoverTimer;
+
+  map.on('mousemove', (e) => {
+    tooltip.style.display = 'block';
+    tooltip.style.left = (e.originalEvent.pageX + 15) + 'px';
+    tooltip.style.top = (e.originalEvent.pageY + 15) + 'px'; // FIXED: pageY for vertical axis
+
+    clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(async () => {
+      const { lat, lng } = e.latlng;
+      try {
+        const res = await fetch(`${API_BASE}/api/weather-at?lat=${lat}&lon=${lng}`);
+        const data = await res.json();
+
+        if (data.temp !== undefined) {
+          document.getElementById('tooltip-city').innerText = data.city_guess || "Bengaluru Outer";
+          document.getElementById('tooltip-temp').innerText = `${Math.round(data.temp)}°C`;
+          document.getElementById('tooltip-aqi').innerText = data.aqi;
+
+          const aqiCol = data.aqi <= 2 ? "#3fff8b" : data.aqi <= 3 ? "#ffbd5c" : "#ff716c";
+          document.getElementById('tooltip-aqi').style.color = aqiCol;
+        }
+      } catch (err) {
+        console.error("Hover Data Error:", err);
+      }
+    }, 300);
+  });
+
+  map.on('mouseout', () => { tooltip.style.display = 'none'; });
 }

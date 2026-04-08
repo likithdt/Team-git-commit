@@ -1,391 +1,418 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 
 <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GreenPulse — Profile</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="assets/styles.css" />
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GreenPulse — Profile</title>
   <style>
-    .material-symbols-outlined {
-      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-      font-size: 24px;
-      line-height: 1;
+    :root {
+      --primary: #3fff8b;
+      --surface: #07090a;
+      --card-bg: rgba(20, 22, 21, 0.6);
+      --border: rgba(255, 255, 255, 0.07);
     }
 
-    @keyframes si {
-      from {
-        opacity: 0;
-        transform: translateY(18px)
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0)
-      }
-    }
-
-    .si {
-      animation: si .45s cubic-bezier(.32, .72, 0, 1) forwards;
-    }
-
-    /* Fix: Structural layout */
     body {
-      padding-top: 100px;
-      padding-bottom: 100px;
+      min-height: 100dvh;
+      padding-bottom: 90px;
+      background: var(--surface);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
     }
 
-    .badge-card {
-      background: rgba(24, 26, 27, .45);
-      backdrop-filter: blur(16px);
-      border-radius: 1.25rem;
-      padding: 1.25rem 0.75rem;
-      border: 1px solid rgba(255, 255, 255, .06);
+    .page {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 5rem 1rem 1rem;
+    }
+
+    /* Card & Layout Components */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border-radius: 1.375rem;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin-bottom: 0.875rem;
+    }
+
+    .sec-title {
+      font-size: .78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: #ababac;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: 1.25rem 1rem .625rem;
+    }
+
+    /* Avatar Ring Logic */
+    .avatar-wrap {
+      position: relative;
+      width: 68px;
+      height: 68px;
+      flex-shrink: 0;
+    }
+
+    .avatar-letter {
+      position: absolute;
+      inset: 7px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.625rem;
+      font-weight: 900;
+      color: var(--primary);
+      background: rgba(63, 255, 139, 0.15);
+    }
+
+    /* Stat Strip */
+    .stat-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-top: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .sc {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
+      padding: 1rem .5rem;
+      gap: .15rem;
+    }
+
+    .sc:not(:last-child) {
+      border-right: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .sc-big {
+      font-size: 1.5rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .sc-tiny {
+      font-size: .56rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #ababac;
+    }
+
+    /* Badge Grid */
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .75rem;
+      padding: 0 1rem 1.25rem;
+    }
+
+    .bdg {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .375rem;
+      padding: .875rem .5rem;
+      border-radius: 1.125rem;
+      background: rgba(24, 26, 25, .6);
+      border: 1px solid var(--border);
       text-align: center;
       transition: transform .2s;
     }
 
-    .achievement {
+    .bdg-icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      border-radius: 1.125rem;
-      background: rgba(18, 20, 19, .45);
-      border: 1px solid rgba(255, 255, 255, .05);
+      justify-content: center;
     }
 
-    .setting-row {
+    /* Weekly Chart */
+    .week-bars {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 0;
-      border-bottom: 1px solid rgba(255, 255, 255, .05);
+      align-items: flex-end;
+      gap: .5rem;
+      height: 72px;
+      padding: 0 1rem;
     }
 
-    .toggle {
+    .wbar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .wbar-bg {
+      width: 100%;
+      border-radius: .4rem .4rem 0 0;
       position: relative;
-      width: 2.75rem;
-      height: 1.5rem;
-      cursor: pointer;
+      overflow: hidden;
     }
 
-    .toggle input {
+    .wbar-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 0;
+      transition: height 1s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    /* Toggles */
+    .tog {
+      position: relative;
+      width: 42px;
+      height: 23px;
+    }
+
+    .tog input {
       opacity: 0;
       width: 0;
       height: 0;
     }
 
-    .toggle-slider {
+    .tog-sl {
       position: absolute;
       inset: 0;
-      background: rgba(255, 255, 255, .12);
       border-radius: 999px;
-      transition: .3s;
+      background: rgba(255, 255, 255, .1);
+      cursor: pointer;
+      transition: .25s;
     }
 
-    .toggle-slider::before {
-      content: "";
+    .tog-sl::before {
+      content: '';
       position: absolute;
-      width: 1.125rem;
-      height: 1.125rem;
-      left: .2rem;
-      top: .19rem;
-      background: #fff;
+      width: 17px;
+      height: 17px;
+      left: 3px;
+      top: 3px;
+      background: #ababac;
       border-radius: 50%;
-      transition: .3s;
+      transition: .25s;
     }
 
-    .toggle input:checked+.toggle-slider {
-      background: #3fff8b;
+    .tog input:checked+.tog-sl {
+      background: rgba(63, 255, 139, 0.4);
     }
 
-    .toggle input:checked+.toggle-slider::before {
-      transform: translateX(1.25rem);
+    .tog input:checked+.tog-sl::before {
+      transform: translateX(19px);
+      background: var(--primary);
+    }
+
+    /* Animation */
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .page>* {
+      animation: slideUp .45s cubic-bezier(.32, .72, 0, 1) both;
+    }
+
+    .page>*:nth-child(n) {
+      animation-delay: calc(0.05s * var(--i, 1));
+    }
+
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      background: rgba(7, 9, 10, 0.8);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .sign-out-btn {
+      padding: .4rem .875rem;
+      border-radius: 999px;
+      background: rgba(255, 113, 80, .12);
+      border: 1px solid rgba(255, 113, 80, .28);
+      color: #ff7350;
+      font-size: .75rem;
+      font-weight: 700;
+      cursor: pointer;
     }
   </style>
 </head>
 
-<body class="bioluminescent-glow" style="min-height:100dvh;">
+<body class="bio-glow">
 
   <header class="top-bar">
-    <div style="display:flex; align-items:center; gap:0.75rem;">
-      <a href="dashboard.html"
-        style="width:2.25rem; height:2.25rem; border-radius:50%; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); text-decoration:none;">
-        <span class="material-symbols-outlined" style="color:#ababac; font-size:20px;">arrow_back</span>
+    <div style="display:flex;align-items:center;gap:.75rem;">
+      <a href="dashboard.html" style="text-decoration:none; color:white; display:flex; align-items:center;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+        </svg>
       </a>
-      <span style="font-size:1.1rem; font-weight:800; color:#3fff8b; text-shadow:0 0 10px rgba(63,255,139,0.4);">My
-        Profile</span>
+      <span style="font-size:1.1rem;font-weight:800;">My Profile</span>
     </div>
-    <button onclick="doLogout()"
-      style="display:flex; align-items:center; gap:.35rem; padding:.4rem .875rem; border-radius:999px; background:rgba(255,113,80,.12); border:1px solid rgba(255,113,80,.28); color:#ff7350; font-size:.75rem; font-weight:700; cursor:pointer; font-family:inherit;">
-      <span class="material-symbols-outlined"
-        style="font-size:16px; font-variation-settings:'FILL' 1;">logout</span>Sign Out
-    </button>
+    <button onclick="doLogout()" class="sign-out-btn">Sign Out</button>
   </header>
 
-  <main class="px-4 max-w-2xl mx-auto space-y-5 si">
-
-    <section class="glass-vessel rounded-2xl p-6 relative overflow-hidden glass-reflection">
-      <div
-        style="position:absolute; top:-3rem; right:-3rem; width:10rem; height:10rem; border-radius:50%; background:rgba(63,255,139,.08); filter:blur(40px); pointer-events:none;">
-      </div>
-      <div style="position:relative; z-index:1; display:flex; align-items:center; gap:1.25rem;">
-        <div style="position:relative; flex-shrink:0;">
-          <svg width="76" height="76" viewBox="0 0 76 76" style="transform:rotate(-90deg);">
-            <circle cx="38" cy="38" r="34" fill="transparent" stroke="rgba(255,255,255,0.06)" stroke-width="4" />
-            <circle id="avatar-ring" cx="38" cy="38" r="34" fill="transparent" stroke="#3fff8b" stroke-width="4"
-              stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="64"
-              style="filter:drop-shadow(0 0 6px rgba(63,255,139,.6)); transition:stroke-dashoffset 1.2s ease;" />
+  <div class="page">
+    <div class="card" style="--i:1">
+      <div style="padding:1.5rem;display:flex;align-items:center;gap:1.25rem;">
+        <div class="avatar-wrap">
+          <svg width="68" height="68" viewBox="0 0 68 68" style="transform:rotate(-90deg);position:absolute;">
+            <circle cx="34" cy="34" r="30" fill="transparent" stroke="rgba(255,255,255,.07)" stroke-width="4" />
+            <circle id="av-ring" cx="34" cy="34" r="30" fill="transparent" stroke="#3fff8b" stroke-width="4"
+              stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="188.5"
+              style="filter:drop-shadow(0 0 5px rgba(63,255,139,.6)); transition: 1.2s ease;" />
           </svg>
-          <div id="avatar-circle"
-            style="position:absolute; inset:6px; border-radius:50%; background:rgba(63,255,139,.18); display:flex; align-items:center; justify-content:center; font-size:1.75rem; font-weight:900; color:#3fff8b;">
-            ?</div>
+          <div class="avatar-letter" id="av-letter">B</div>
         </div>
-        <div style="flex:1; min-width:0;">
-          <div id="prof-name" style="font-size:1.4rem; font-weight:900; line-height:1.2; color:#fff;">Loading…</div>
-          <div id="prof-email" style="font-size:.8rem; color:#ababac; margin-top:.2rem;"></div>
-          <div style="display:flex; align-items:center; gap:.4rem; margin-top:.6rem;">
-            <span class="material-symbols-outlined"
-              style="font-size:16px; color:#3fff8b; font-variation-settings:'FILL' 1;">location_on</span>
-            <span id="prof-city" style="font-size:.8rem; color:#ababac; font-weight:700;"></span>
-            <span style="color:rgba(255,255,255,0.2);">|</span>
-            <span id="prof-since" style="font-size:.75rem; color:#ababac; font-weight:500;"></span>
+        <div>
+          <div id="p-name" style="font-size:1.4rem;font-weight:900;">Bengaluru User</div>
+          <div id="p-meta"
+            style="font-size:.75rem;color:#ababac;margin-top:4px;display:flex;align-items:center;gap:6px;">
+            <span id="p-city">📍 Bengaluru</span> • <span id="p-since">Since 2025</span>
           </div>
         </div>
-        <a href="#" onclick="showEditModal();return false;"
-          style="width:2.5rem; height:2.5rem; border-radius:50%; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-          <span class="material-symbols-outlined" style="font-size:18px; color:#ababac;">edit</span>
-        </a>
       </div>
-
-      <div
-        style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,.06);">
-        <div style="text-align:center;">
-          <div
-            style="font-size:.6rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:#ababac; margin-bottom:.3rem;">
-            Journeys</div>
-          <div id="stat-journeys" style="font-size:1.5rem; font-weight:900; color:#fff;">—</div>
+      <div class="stat-strip">
+        <div class="sc">
+          <div class="sc-tiny">Journeys</div>
+          <div class="sc-big" id="sc-journeys">24</div>
         </div>
-        <div
-          style="text-align:center; border-left:1px solid rgba(255,255,255,.06); border-right:1px solid rgba(255,255,255,.06);">
-          <div
-            style="font-size:.6rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:#ababac; margin-bottom:.3rem;">
-            CO₂ Saved</div>
-          <div id="stat-co2" style="font-size:1.5rem; font-weight:900; color:#3fff8b;">—</div>
+        <div class="sc">
+          <div class="sc-tiny">CO₂ Saved</div>
+          <div class="sc-big" id="sc-co2" style="color:var(--primary);">850g</div>
         </div>
-        <div style="text-align:center;">
-          <div
-            style="font-size:.6rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:#ababac; margin-bottom:.3rem;">
-            Avg Lungs</div>
-          <div id="stat-lungs" style="font-size:1.5rem; font-weight:900; color:#ffbd5c;">—</div>
+        <div class="sc">
+          <div class="sc-tiny">Avg Lungs</div>
+          <div class="sc-big" id="sc-lungs" style="color:#ffbd5c;">82</div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <section class="glass-vessel rounded-2xl p-5">
-      <h3
-        style="font-weight:800; font-size:.95rem; color:#fff; margin-bottom:1.25rem; display:flex; align-items:center; gap:.6rem;">
-        <span class="material-symbols-outlined"
-          style="color:#ffbd5c; font-size:22px; font-variation-settings:'FILL' 1;">workspace_premium</span>
-        Health Badges
-      </h3>
-      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem;" id="badges-grid"></div>
-    </section>
-
-    <section class="glass-vessel rounded-2xl p-5">
-      <h3
-        style="font-weight:800; font-size:.95rem; color:#fff; margin-bottom:1.25rem; display:flex; align-items:center; gap:.6rem;">
-        <span class="material-symbols-outlined"
-          style="color:#3fff8b; font-size:22px; font-variation-settings:'FILL' 1;">emoji_events</span>
-        Achievements
-      </h3>
-      <div style="display:flex; flex-direction:column; gap:.75rem;" id="achievements-list"></div>
-    </section>
-
-    <section class="glass-vessel rounded-2xl p-5">
-      <h3
-        style="font-weight:800; font-size:.95rem; color:#fff; margin-bottom:1.25rem; display:flex; align-items:center; gap:.6rem;">
-        <span class="material-symbols-outlined"
-          style="color:#3fff8b; font-size:22px; font-variation-settings:'FILL' 1;">bar_chart</span>
-        Weekly Lungs Score
-      </h3>
-      <div style="display:flex; align-items:flex-end; gap:.6rem; height:100px; padding:0 0.5rem;" id="week-chart"></div>
-      <div style="display:flex; justify-content:space-around; margin-top:.75rem; padding:0 0.5rem;">
-        ${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<span
-          style="font-size:.65rem; color:#ababac; font-weight:700; width:100%; text-align:center;">${d}</span>`).join("")}
-      </div>
-    </section>
-
-    <section class="glass-vessel rounded-2xl p-5">
-      <h3
-        style="font-weight:800; font-size:.95rem; color:#fff; margin-bottom:.5rem; display:flex; align-items:center; gap:.6rem;">
-        <span class="material-symbols-outlined" style="color:#ababac; font-size:22px;">settings</span>
-        Preferences
-      </h3>
-      <div class="setting-row">
-        <div>
-          <div style="font-weight:700; font-size:.9rem; color:#fff;">Push Notifications</div>
-          <div style="font-size:.75rem; color:#ababac;">Departure reminders</div>
+    <div class="card" style="--i:2">
+      <div class="sec-title">🏆 Health Badges</div>
+      <div class="badge-grid" id="badge-grid">
+        <div class="bdg">
+          <div class="bdg-icon">🌱</div>
+          <div style="font-size:0.7rem;font-weight:700;">Green Starter</div>
         </div>
-        <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+        <div class="bdg">
+          <div class="bdg-icon">💨</div>
+          <div style="font-size:0.7rem;font-weight:700;">Air Hero</div>
+        </div>
+        <div class="bdg" style="opacity:0.4">
+          <div class="bdg-icon">🚲</div>
+          <div style="font-size:0.7rem;font-weight:700;">Cyclist 🔒</div>
+        </div>
       </div>
-      <div class="setting-row" style="cursor:pointer;" onclick="doLogout()">
-        <div style="font-weight:700; font-size:.9rem; color:#ff7350;">Sign Out</div>
-        <span class="material-symbols-outlined" style="font-size:20px; color:#ababac;">logout</span>
-      </div>
-    </section>
-  </main>
+    </div>
 
-  <nav id="bottom-nav"></nav>
-
-  <div id="edit-modal"
-    style="display:none; position:fixed; inset:0; z-index:200; background:rgba(7,9,10,.85); backdrop-filter:blur(20px); align-items:center; justify-content:center; padding:1.5rem;">
-    <div
-      style="width:100%; max-width:380px; background:rgba(18,20,19,0.95); border:1px solid rgba(255,255,255,.1); border-radius:1.5rem; padding:2rem;">
-      <h2 style="font-size:1.25rem; font-weight:900; color:#fff; margin-bottom:1.5rem;">Edit Profile</h2>
-      <div style="display:flex; flex-direction:column; gap:1rem;">
-        <input id="edit-name" placeholder="Name"
-          style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:1rem; padding:1rem; color:#fff; outline:none;"
-          type="text" />
-        <input id="edit-city" placeholder="City"
-          style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:1rem; padding:1rem; color:#fff; outline:none;"
-          type="text" />
+    <div class="card" style="--i:3">
+      <div class="sec-title">📊 This Week</div>
+      <div class="week-bars" id="week-bars" style="margin-bottom:10px;">
+        <div class="wbar-wrap" style="flex:1;">
+          <div class="wbar-bg" style="height:60px; background:#ffbd5c30;">
+            <div class="wbar-fill" style="height:70%; background:#ffbd5c;"></div>
+          </div>
+        </div>
+        <div class="wbar-wrap" style="flex:1;">
+          <div class="wbar-bg" style="height:60px; background:#ff735030;">
+            <div class="wbar-fill" style="height:45%; background:#ff7350;"></div>
+          </div>
+        </div>
+        <div class="wbar-wrap" style="flex:1;">
+          <div class="wbar-bg" style="height:60px; background:#ffbd5c30;">
+            <div class="wbar-fill" style="height:85%; background:#ffbd5c;"></div>
+          </div>
+        </div>
+        <div class="wbar-wrap" style="flex:1;">
+          <div class="wbar-bg" style="height:60px; background:#ff735030;">
+            <div class="wbar-fill" style="height:40%; background:#ff7350;"></div>
+          </div>
+        </div>
+        <div class="wbar-wrap" style="flex:1;">
+          <div class="wbar-bg" style="height:60px; background:#3fff8b30;">
+            <div class="wbar-fill" style="height:95%; background:#3fff8b;"></div>
+          </div>
+        </div>
+        <div class="wbar-wrap" style="flex:1;">
+          <div class="wbar-bg" style="height:60px; background:#3fff8b30;">
+            <div class="wbar-fill" style="height:100%; background:#3fff8b;"></div>
+          </div>
+        </div>
+        <div class="wbar-wrap" style="flex:1;">
+          <div class="wbar-bg" style="height:60px; background:#ffbd5c30;">
+            <div class="wbar-fill" style="height:75%; background:#ffbd5c;"></div>
+          </div>
+        </div>
       </div>
-      <button onclick="saveEdit()"
-        style="margin-top:1.5rem; width:100%; background:#3fff8b; color:#004f24; font-weight:900; padding:1rem; border-radius:1rem; border:none; cursor:pointer;">Save
-        Changes</button>
-      <button onclick="closeEdit()"
-        style="width:100%; background:transparent; color:#ababac; padding:1rem; border:none; cursor:pointer; font-weight:700;">Cancel</button>
+      <div style="display:flex;justify-content:space-around;padding-bottom:15px; font-size:0.6rem; color:#ababac;">
+        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+      </div>
+    </div>
+
+    <div class="card" style="--i:4">
+      <div class="sec-title">Account</div>
+      <div class="set-row" onclick="doLogout()"
+        style="display:flex;justify-content:space-between;padding:1.25rem;cursor:pointer;">
+        <div style="color:#ff7350;font-weight:700; font-size:0.9rem;">Sign Out</div>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#ff7350">
+          <path
+            d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+        </svg>
+      </div>
     </div>
   </div>
 
+  <nav id="bottom-nav"></nav>
+
   <script src="assets/app.js"></script>
   <script>
-    buildBottomNav("profile");
+    function init() {
+      // Avatar Progress Ring Animation
+      const circ = 2 * Math.PI * 30;
+      const ring = document.getElementById("av-ring");
+      ring.style.strokeDasharray = circ;
+      setTimeout(() => {
+        ring.style.strokeDashoffset = circ - (0.82 * circ); // 82% progress
+      }, 500);
 
-    function logout() {
-      localStorage.removeItem("gp_user"); // Deletes the session
-      window.location.href = "signin.html"; // Redirects
+      // Dynamic Bottom Nav (if your app.js supports it)
+      if (typeof buildBottomNav === 'function') buildBottomNav("profile");
     }
 
-    const BADGES = [
-      { icon: "eco", label: "Green Starter", desc: "First healthy route", color: "#3fff8b", unlocked: true },
-      { icon: "air", label: "Clean Air Hero", desc: "10 low-AQI journeys", color: "#3fff8b", unlocked: true },
-      { icon: "directions_bike", label: "Cyclist", desc: "5 cycling commutes", color: "#ffbd5c", unlocked: true },
-      { icon: "thermostat", label: "Heat Dodger", desc: "Avoided 5 heat zones", color: "#ffbd5c", unlocked: false },
-      { icon: "savings", label: "CO₂ Saver", desc: "Saved 1kg CO₂", color: "#3fff8b", unlocked: false },
-      { icon: "fitness_center", label: "Calorie King", desc: "Burned 1000+ kcal", color: "#ff7350", unlocked: false },
-    ];
-
-    const ACHIEVEMENTS = [
-      { icon: "emoji_nature", label: "7-Day Streak", sub: "Used GreenPulse 7 days in a row", color: "#3fff8b", done: true, pts: 100 },
-      { icon: "air", label: "PM2.5 Guardian", sub: "Avoided 500mg PM2.5 total", color: "#3fff8b", done: true, pts: 200 },
-      { icon: "route", label: "Route Explorer", sub: "Tried all 3 route types", color: "#ffbd5c", done: false, pts: 150 },
-      { icon: "public", label: "City Contributor", sub: "Submitted 5 community AQI reports", color: "#ff7350", done: false, pts: 300 },
-    ];
-
-    const WEEK_SCORES = [72, 65, 80, 58, 77, 88, 74];
-
-    (function init() {
-      const raw = localStorage.getItem("gp_user");
-      if (!raw) { window.location.href = "login.html"; return; }
-      const u = JSON.parse(raw);
-
-      document.getElementById("prof-name").textContent = u.name || "User";
-      document.getElementById("prof-email").textContent = u.email || "";
-      document.getElementById("prof-city").textContent = u.city || "Bengaluru";
-      document.getElementById("prof-since").textContent = `Since ${u.joinedDate || "2025"}`;
-
-      const av = document.getElementById("avatar-circle");
-      av.textContent = (u.avatar || (u.name || "U").charAt(0)).toUpperCase();
-
-      document.getElementById("stat-journeys").textContent = u.journeys || 0;
-      document.getElementById("stat-co2").innerHTML = `${u.co2Saved || 0}<span style="font-size:.7rem; color:#ababac; margin-left:2px;">g</span>`;
-      document.getElementById("stat-lungs").textContent = u.lungsAvg || "—";
-
-      const pct = Math.min(100, ((u.journeys || 0) / 30) * 100);
-      const r = 34, circ = 2 * Math.PI * r;
-      document.getElementById("avatar-ring").setAttribute("stroke-dashoffset", circ - (pct / 100) * circ);
-
-      document.getElementById("badges-grid").innerHTML = BADGES.map(b => `
-        <div class="badge-card" style="border-color:${b.unlocked ? b.color + "22" : "rgba(255,255,255,.05)"}; opacity:${b.unlocked ? 1 : .5};">
-          <div style="width:2.5rem; height:2.5rem; border-radius:50%; background:${b.color}15; border:1px solid ${b.color}${b.unlocked ? "44" : "15"}; display:flex; align-items:center; justify-content:center; margin-bottom:4px;">
-            <span class="material-symbols-outlined" style="font-size:18px; color:${b.unlocked ? b.color : "#ababac"}; font-variation-settings:'FILL' 1;">${b.icon}</span>
-          </div>
-          <div style="font-size:.75rem; font-weight:800; color:${b.unlocked ? "#fff" : "#ababac"}; line-height:1.1;">${b.label}</div>
-          <div style="font-size:.6rem; color:#ababac; line-height:1.2; margin-top:2px;">${b.desc}</div>
-        </div>`).join("");
-
-      document.getElementById("achievements-list").innerHTML = ACHIEVEMENTS.map(a => `
-        <div class="achievement" style="border-color:${a.done ? a.color + "22" : "rgba(255,255,255,.05)"}; opacity:${a.done ? 1 : .6};">
-          <div style="width:2.75rem; height:2.75rem; border-radius:50%; background:${a.color}15; border:1px solid ${a.color}${a.done ? "44" : "15"}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-            <span class="material-symbols-outlined" style="font-size:20px; color:${a.done ? a.color : "#ababac"}; font-variation-settings:'FILL' 1;">${a.icon}</span>
-          </div>
-          <div style="flex:1;">
-            <div style="font-weight:800; font-size:.9rem; color:#fff;">${a.label}</div>
-            <div style="font-size:.75rem; color:#ababac; margin-top:2px;">${a.sub}</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:.9rem; font-weight:900; color:${a.color};">+${a.pts}</div>
-            <div style="font-size:.6rem; color:#ababac; font-weight:700;">PTS</div>
-          </div>
-        </div>`).join("");
-
-      const maxS = Math.max(...WEEK_SCORES);
-      document.getElementById("week-chart").innerHTML = WEEK_SCORES.map((s, i) => {
-        const hPct = (s / maxS) * 100;
-        const col = s >= 75 ? "#3fff8b" : s >= 55 ? "#ffbd5c" : "#ff7350";
-        return `
-        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:.4rem;">
-          <div style="font-size:.7rem; font-weight:900; color:${col};">${s}</div>
-          <div style="width:100%; border-radius:.6rem .6rem 0 0; background:${col}15; position:relative; overflow:hidden;" data-h="${hPct}">
-            <div class="bar-fill" style="position:absolute; bottom:0; left:0; right:0; height:0; background:linear-gradient(to top,${col},${col}aa); border-radius:.6rem .6rem 0 0; transition:height 1s ease;"></div>
-          </div>
-        </div>`;
-      }).join("");
-
-      setTimeout(() => {
-        document.querySelectorAll("[data-h]").forEach(el => {
-          const h = parseFloat(el.dataset.h);
-          el.style.height = h + "%";
-          el.querySelector(".bar-fill").style.height = "100%";
-        });
-      }, 300);
-    })();
-
-    function showEditModal() {
-      const user = JSON.parse(localStorage.getItem("gp_user"));
-      if (user) {
-        document.getElementById('user-name').innerText = user.name;
-        document.getElementById('stat-journeys').innerText = user.journeys;
-        document.getElementById('stat-co2').innerText = `${user.co2_saved}g`;
-        document.getElementById('stat-lungs').innerText = `${user.lungs_avg}%`;
+    function doLogout() {
+      if (confirm("Are you sure you want to sign out?")) {
+        localStorage.removeItem("gp_user");
+        window.location.href = "login.html";
       }
     }
-    function closeEdit() { document.getElementById("edit-modal").style.display = "none"; }
-    function saveEdit() {
-      const u = JSON.parse(localStorage.getItem("gp_user") || "{}");
-      u.name = document.getElementById("edit-name").value.trim() || u.name;
-      u.city = document.getElementById("edit-city").value.trim() || u.city;
-      localStorage.setItem("gp_user", JSON.stringify(u));
-      location.reload();
-    }
-    function doLogout() {
-      localStorage.removeItem("gp_user");
-      window.location.href = "login.html";
-    }
+
+    init();
   </script>
-  <nav id="bottom-nav"
-    class="fixed bottom-0 left-0 right-0 bg-[#121315]/80 backdrop-blur-lg border-t border-white/5 flex justify-around items-center py-3 px-2 z-50">
-  </nav>
 </body>
 
 </html>
