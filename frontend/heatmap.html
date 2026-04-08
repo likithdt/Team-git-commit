@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GreenPulse — City Heatmap</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
+      font-size: 24px; line-height: 1;
+    }
+    #map-canvas { cursor: crosshair; }
+    .tooltip {
+      position: absolute;
+      padding: 0.5rem 0.75rem;
+      background: rgba(24,26,27,0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 0.75rem;
+      font-size: 0.75rem;
+      pointer-events: none;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body class="bioluminescent-glow min-h-screen pb-28" style="overflow:hidden">
+
+<!-- Top Bar -->
+<header class="top-bar">
+  <div class="flex items-center gap-3">
+    <a href="dashboard.html" class="w-9 h-9 rounded-full glass-vessel flex items-center justify-center border border-white/10 active:scale-90 transition-transform">
+      <span class="material-symbols-outlined text-on-surface-variant text-[20px]">arrow_back</span>
+    </a>
+    <span class="text-lg font-bold text-primary text-glow-primary tracking-tight">City Heatmap</span>
+  </div>
+  <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-vessel border border-white/10">
+    <span class="material-symbols-outlined text-primary text-[14px]" style="font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24">refresh</span>
+    <span id="last-updated" class="text-xs font-semibold text-on-surface-variant">Live</span>
+  </div>
+</header>
+
+<!-- Full-screen map canvas -->
+<div class="fixed inset-0 z-0" style="top:80px">
+  <canvas id="map-canvas" class="w-full h-full"></canvas>
+  <div id="tooltip" class="tooltip" style="opacity:0; top:0; left:0"></div>
+</div>
+
+<!-- Floating bottom sheet -->
+<div class="fixed bottom-20 left-0 right-0 z-20 px-4 space-y-3 max-w-2xl mx-auto">
+
+  <!-- Legend -->
+  <div class="glass-vessel rounded-2xl p-4 flex items-center justify-between gap-3">
+    <span class="text-xs text-on-surface-variant font-bold uppercase tracking-widest">AQI Legend</span>
+    <div class="flex items-center gap-2 flex-wrap justify-end">
+      <span class="flex items-center gap-1 text-xs"><span class="w-3 h-3 rounded-full inline-block" style="background:#3fff8b"></span>Good</span>
+      <span class="flex items-center gap-1 text-xs"><span class="w-3 h-3 rounded-full inline-block" style="background:#ffbd5c"></span>Moderate</span>
+      <span class="flex items-center gap-1 text-xs"><span class="w-3 h-3 rounded-full inline-block" style="background:#ff7350"></span>Unhealthy</span>
+      <span class="flex items-center gap-1 text-xs"><span class="w-3 h-3 rounded-full inline-block" style="background:#ff716c"></span>Hazardous</span>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="grid grid-cols-3 gap-3">
+    <div class="stat-chip glass-vessel rounded-2xl">
+      <span class="label">Reports</span>
+      <span class="value text-primary text-lg" id="stat-reports">—</span>
+    </div>
+    <div class="stat-chip glass-vessel rounded-2xl">
+      <span class="label">Clean Zones</span>
+      <span class="value text-primary text-lg" id="stat-clean">—</span>
+    </div>
+    <div class="stat-chip glass-vessel rounded-2xl">
+      <span class="label">Hot Spots</span>
+      <span class="value text-secondary text-lg" id="stat-hot">—</span>
+    </div>
+  </div>
+
+  <!-- Cleanest areas -->
+  <div class="glass-vessel rounded-2xl p-4" id="clean-spots-card">
+    <div class="text-xs text-primary font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+      <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24">eco</span>
+      Cleanest Corridors Right Now
+    </div>
+    <div id="clean-list" class="space-y-2">
+      <div class="h-4 bg-white/5 rounded animate-pulse"></div>
+      <div class="h-4 bg-white/5 rounded animate-pulse w-3/4"></div>
+    </div>
+  </div>
+</div>
+
+<nav id="bottom-nav"></nav>
+
+<script src="assets/app.js"></script>
+<script>
+buildBottomNav("heatmap");
+
+function aqiToRgb(aqi) {
+  if (aqi <= 50)  return [63, 255, 139];
+  if (aqi <= 100) return [255, 189, 92];
+  if (aqi <= 150) return [255, 115, 80];
+  if (aqi <= 200) return [255, 113, 108];
+  return [159, 5, 25];
+}
+
+function drawHeatmap(canvas, zones) {
+  const ctx = canvas.getContext("2d");
+  canvas.width  = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw city grid background
+  ctx.strokeStyle = "rgba(63,255,139,0.06)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x < canvas.width; x += 50) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+  }
+  for (let y = 0; y < canvas.height; y += 50) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+  }
+
+  // Compute lat/lon bounds from zones
+  const lats = zones.map(z => z.lat);
+  const lons = zones.map(z => z.lon);
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+  const pad = 0.12;
+
+  const toX = lon => ((lon - minLon) / (maxLon - minLon + 1e-9)) * (canvas.width  * (1-2*pad)) + canvas.width  * pad;
+  const toY = lat => (1 - (lat - minLat) / (maxLat - minLat + 1e-9)) * (canvas.height * (1-2*pad)) + canvas.height * pad;
+
+  // Draw each zone as radial gradient blob
+  zones.forEach(z => {
+    const x   = toX(z.lon);
+    const y   = toY(z.lat);
+    const r   = z.radius_m * 0.12; // scale
+    const [rr, gg, bb] = aqiToRgb(z.aqi);
+
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+    grad.addColorStop(0,   `rgba(${rr},${gg},${bb},0.45)`);
+    grad.addColorStop(0.5, `rgba(${rr},${gg},${bb},0.2)`);
+    grad.addColorStop(1,   `rgba(${rr},${gg},${bb},0)`);
+
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+  });
+
+  // Center dot (user location)
+  const cx = canvas.width / 2, cy = canvas.height / 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+  ctx.fillStyle = "#3fff8b";
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(63,255,139,0.35)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  return { toX, toY };
+}
+
+(async () => {
+  const canvas = document.getElementById("map-canvas");
+  const tooltip = document.getElementById("tooltip");
+
+  try {
+    const d = await API.heatmap();
+
+    document.getElementById("stat-reports").textContent = d.community_reports;
+    document.getElementById("stat-clean").textContent = d.clean_spots.length;
+    document.getElementById("stat-hot").textContent = d.hot_spots.length;
+
+    // Time
+    const t = new Date(d.last_updated);
+    document.getElementById("last-updated").textContent =
+      `${t.getHours()}:${String(t.getMinutes()).padStart(2,"0")}`;
+
+    const { toX, toY } = drawHeatmap(canvas, d.zones);
+
+    // Clean list
+    document.getElementById("clean-list").innerHTML = d.clean_spots.slice(0,3).map(z => {
+      const color = z.category.color;
+      return `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full" style="background:${color}"></div>
+            <span class="text-xs">${z.lat.toFixed(3)}°N, ${z.lon.toFixed(3)}°E</span>
+          </div>
+          <span class="badge" style="color:${color};border-color:${color}44;background:${color}15">AQI ${z.aqi}</span>
+        </div>`;
+    }).join("");
+
+    // Tooltip on hover
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      let closest = null, minDist = Infinity;
+      d.zones.forEach(z => {
+        const zx = toX(z.lon), zy = toY(z.lat);
+        const dist = Math.hypot(mx - zx, my - zy);
+        if (dist < 60 && dist < minDist) { minDist = dist; closest = z; }
+      });
+
+      if (closest) {
+        const color = closest.category.color;
+        tooltip.style.opacity = "1";
+        tooltip.style.left = `${e.clientX - rect.left + 12}px`;
+        tooltip.style.top  = `${e.clientY - rect.top  - 40}px`;
+        tooltip.innerHTML = `
+          <span style="color:${color};font-weight:700">AQI ${closest.aqi}</span>
+          <span style="color:#ababac"> — ${closest.category.label}</span><br>
+          <span style="color:#ababac;font-size:0.65rem">Temp ${closest.temp}°C</span>`;
+      } else {
+        tooltip.style.opacity = "0";
+      }
+    });
+    canvas.addEventListener("mouseleave", () => { tooltip.style.opacity = "0"; });
+
+    // Redraw on resize
+    window.addEventListener("resize", () => drawHeatmap(canvas, d.zones));
+
+  } catch(e) {
+    canvas.parentElement.innerHTML += `
+      <div class="absolute inset-0 flex items-center justify-center">
+        <div class="glass-vessel rounded-2xl p-6 text-center">
+          <p class="text-secondary text-sm">⚠️ Backend not reachable.</p>
+          <p class="text-on-surface-variant text-xs mt-1">Run: <code>uvicorn main:app --reload</code></p>
+        </div>
+      </div>`;
+  }
+})();
+</script>
+</body>
+</html>
