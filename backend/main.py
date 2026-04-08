@@ -12,8 +12,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import google.generativeai as genai
 from dotenv import load_dotenv
+import sqlite3
+from database import init_db
 
 load_dotenv()
+init_db()
+
+class UserSignup(BaseModel):
+    name: str
+    email: str
+    password: str
+
+class JourneyComplete(BaseModel):
+    email: str
+    co2_saved: int
+    lungs_score: int
 
 app = FastAPI(title="GreenPulse API", version="1.0.0")
 
@@ -55,6 +68,17 @@ def _aqi_category(aqi: int) -> dict:
     if aqi <= 200:
         return {"label": "Unhealthy", "color": "#ff716c", "glow": "red"}
     return {"label": "Hazardous", "color": "#9f0519", "glow": "red"}
+
+def get_db_conn():
+    conn = sqlite3.connect('greenpulse.db')
+    conn.row_factory = sqlite3.Row # Allows accessing columns by name
+    return conn
+
+def get_user(email: str):
+    conn = get_db_conn()
+    user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+    conn.close()
+    return dict(user) if user else None
 
 def _lungs_score(aqi: int, temp_c: float) -> int:
     """Compute a 0-100 Lungs Score from AQI + temperature."""
@@ -274,7 +298,7 @@ def _fallback_routes(env: dict, origin: str, destination: str) -> dict:
         "best_window_minutes": 8,
     }
 
-def _build_heatmap_zones(lat: float, lon: float) -> list:
+def _build_heatmap_zones(lat: float, lon: float, base_aqi: int) -> list:
     """Generate mock heatmap zones around a city center."""
     zones = []
     angles = [i * 30 for i in range(12)]
@@ -285,7 +309,7 @@ def _build_heatmap_zones(lat: float, lon: float) -> list:
             z_lat = lat + r * math.cos(rad)
             z_lon = lon + r * math.sin(rad)
             seed  = int(abs(z_lat * z_lon * 10000)) % 200
-            aqi   = seed % 180 + 10
+            aqi   = base_aqi + random.randint(-20, 50)
             zones.append({
                 "lat": round(z_lat, 5),
                 "lon": round(z_lon, 5),
@@ -297,6 +321,62 @@ def _build_heatmap_zones(lat: float, lon: float) -> list:
     return zones
 
 # ── API Routes ───────────────────────────────────────────────────────────────
+@app.post("/api/signup")
+async def signup(user: UserSignup):
+    conn = get_db_conn()
+    try:
+        conn.execute(
+            'INSERT INTO users (name, email, password, joined_date) VALUES (?, ?, ?, ?)',
+            (user.name, user.email, user.password, datetime.now().strftime("%Y-%m-%d"))
+        )
+        conn.commit()
+        return {"message": "User created successfully"}
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    finally:
+        conn.close()
+
+@app.post("/api/login")
+async def login(data: dict):
+    user = get_user(data.get("email"))
+    if user and user["password"] == data.get("password"):
+        return {"status": "success", "user": user}
+    raise HTTPException(status_code=401, detail="Invalid credentials")
+
+@app.post("/api/complete-journey")
+async def journey_complete(data: JourneyComplete):
+    conn = get_db_conn()
+    try:
+        # 1. Update User Stats
+        conn.execute(
+            '''
+            UPDATE users 
+            SET journeys = journeys + 1, 
+                co2_saved = co2_saved + ?, 
+                lungs_avg = ?
+            WHERE email = ?
+            ''',
+            (data.co2_saved, data.lungs_score, data.email)
+        )
+        
+        # 2. Log History
+        conn.execute(
+            '''
+            INSERT INTO history (user_email, date, lungs_score, co2_saved)
+            VALUES (?, ?, ?, ?)
+            ''',
+            (data.email, datetime.now().strftime("%Y-%m-%d"), data.lungs_score, data.co2_saved)
+        )
+        
+        conn.commit()
+        
+        # Fetch updated user data
+        updated_user = get_user(data.email)
+        return {"status": "success", "new_stats": updated_user}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
 
 @app.get("/")
 async def root():
@@ -429,7 +509,6 @@ async def journey_detail(
         ]),
     }
 
-
 @app.get("/api/heatmap")
 async def heatmap(lat: float = 12.9716, lon: float = 77.5946, city: str = "Bengaluru"):
     """Returns pollution heatmap zones for the city."""
@@ -457,3 +536,11 @@ async def health_check():
         "owm_configured": bool(OWM_KEY),
         "timestamp": datetime.now().isoformat(),
     }
+
+@app.get("/api/daily-briefing")
+async def get_daily_briefing(city: str = "Bengaluru"):
+    env = await _fetch_owm(12.9716, 77.5946) # Use city coords
+    prompt = f"Give a 1-sentence health advice for a commuter in {city} where AQI is {env['aqi']} and temp is {env['temp']}C. Focus on respiratory safety."
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    resp = model.generate_content(prompt)
+    return {"briefing": resp.text.strip()}
