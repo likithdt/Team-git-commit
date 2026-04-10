@@ -1,6 +1,6 @@
 # GreenPulse
 ### AI-Powered Micro-Climate & Commute Optimizer
-**Developed for INNOVATEX 4.0: BuildWithAI 24-Hour Hackathon** *Organized by Presidency University, Bengaluru*
+**Developed for Vishwakarma 24-Hour Hackathon** *Organized by Cambridge Institute of Technology and Management, Bengaluru*
 
 ---
 
